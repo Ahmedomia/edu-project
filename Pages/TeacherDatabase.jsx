@@ -1,0 +1,161 @@
+import { useState, useMemo } from "react";
+import Header from "../Components/Header";
+import useStore from "../src/store";
+import { useNavigate } from "react-router-dom";
+
+const TeachersDatabase = () => {
+  const registeredUsers = useStore((state) => state.registeredUsers);
+  const [city, setCity] = useState("الكل");
+  const [specialty, setSpecialty] = useState("الكل");
+  const [search, setSearch] = useState("");
+  const navigate = useNavigate();
+
+  const teachers = useMemo(() => {
+    return registeredUsers
+      .filter((user) => user.role === "teacher")
+      .map((user) => ({
+        id: user.email,
+        name: user.name || "معلم",
+        title: user.jobTitle || "معلم",
+        city: user.city || "غير محدد",
+        email: user.email,
+        bio: user.bio || "",
+        phone: user.phone || "",
+        photo: user.photo || "",
+      }));
+  }, [registeredUsers]);
+
+  const cities = useMemo(() => {
+    const citySet = new Set(teachers.map((t) => t.city).filter(Boolean));
+    return ["الكل", ...Array.from(citySet)];
+  }, [teachers]);
+
+  const filteredTeachers = useMemo(() => {
+    return teachers.filter((t) => {
+      const matchesCity = city === "الكل" || t.city === city;
+      const matchesSearch =
+        !search ||
+        t.name.toLowerCase().includes(search.toLowerCase()) ||
+        t.title.toLowerCase().includes(search.toLowerCase()) ||
+        (t.bio && t.bio.toLowerCase().includes(search.toLowerCase()));
+
+      const matchesSpecialty =
+        specialty === "الكل" ||
+        t.title.toLowerCase().includes(specialty.toLowerCase()) ||
+        (t.bio && t.bio.toLowerCase().includes(specialty.toLowerCase()));
+
+      return matchesCity && matchesSearch && matchesSpecialty;
+    });
+  }, [teachers, city, search, specialty]);
+
+  return (
+    <>
+      <Header />
+      <div className="min-h-screen bg-slate-50 pt-28 px-6">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-2xl font-bold text-right mb-6">
+            قاعدة بيانات المعلمين
+          </h2>
+          <div className="bg-white p-4 rounded-xl shadow-md flex flex-col md:flex-row gap-4 mb-8">
+            <select
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              className="rounded-lg bg-gray-200 px-4 py-2"
+            >
+              {cities.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={specialty}
+              onChange={(e) => setSpecialty(e.target.value)}
+              className="rounded-lg bg-gray-200 px-4 py-2"
+            >
+              <option>الكل</option>
+              <option>رياضيات</option>
+              <option>لغات</option>
+              <option>عربية</option>
+              <option>إنجليزي</option>
+              <option>فيزياء</option>
+              <option>كيمياء</option>
+              <option>إرشاد</option>
+            </select>
+
+            <div className="relative flex-1">
+              <span className="material-symbols-outlined absolute right-3 top-2.5 text-slate-400">
+                search
+              </span>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="بحث بالاسم أو المهارة..."
+                className="w-full rounded-lg bg-gray-200 px-10 py-2"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredTeachers.length === 0 ? (
+              <div className="col-span-full bg-white rounded-xl shadow-xl p-8 text-center">
+                <p className="text-gray-500 text-lg">لا يوجد معلمين مسجلين</p>
+                <p className="text-gray-400 text-sm mt-2">
+                  جرب تغيير معايير البحث
+                </p>
+              </div>
+            ) : (
+              filteredTeachers.map((t) => (
+                <div
+                  key={t.id}
+                  className="bg-white rounded-xl shadow-xl p-6 text-center"
+                >
+                  <div className="mx-auto h-24 w-24 rounded-full bg-sky-100 flex items-center justify-center mb-4 overflow-hidden">
+                    {t.photo ? (
+                      <img
+                        src={t.photo}
+                        alt={t.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-3xl text-sky-700 font-bold">
+                        {t.name.charAt(0)}
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="font-bold text-slate-800">{t.name}</h3>
+                  <p className="text-sm text-sky-700">{t.title}</p>
+
+                  <div className="flex justify-between text-xs text-slate-600 mt-4 border-t pt-3">
+                    <span>{t.city}</span>
+                    <span>{t.email}</span>
+                  </div>
+
+                  {t.bio && (
+                    <div className="mt-4">
+                      <p className="text-xs text-slate-500 text-right line-clamp-2">
+                        {t.bio}
+                      </p>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() =>
+                      navigate(`/teacher/${encodeURIComponent(t.email)}`)
+                    }
+                    className="mt-5 w-full rounded-lg border border-sky-800 text-sky-800 py-2 hover:bg-sky-800 hover:text-white transition"
+                  >
+                    عرض الملف
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default TeachersDatabase;
