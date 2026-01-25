@@ -102,12 +102,12 @@ export default function JobSearch() {
         <div className="max-w-6xl mx-auto">
           <h1 className="text-2xl font-bold text-right mb-6">البحث عن وظائف</h1>
 
-          <div className="bg-white rounded-2xl shadow p-4 mb-6 flex flex-wrap gap-4 items-center justify-end">
+          <div className="bg-white rounded-2xl shadow p-4 mb-6 flex flex-col md:flex-row md:flex-wrap gap-4 items-stretch md:items-center justify-end">
             <input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="ابحث بالمسمى الوظيفي أو اسم المدرسة"
-              className="flex-1 min-w-[250px] rounded-lg bg-slate-800 text-white px-4 py-3"
+              className="flex-1 min-w-0 w-full md:min-w-[250px] rounded-lg bg-slate-800 text-white px-4 py-3"
             />
             <select
               value={selectedCity}
@@ -145,7 +145,7 @@ export default function JobSearch() {
                 return (
                   <div
                     key={job.id}
-                    className="bg-white rounded-2xl shadow p-6 flex justify-between items-center"
+                    className="bg-white rounded-2xl shadow p-6 flex flex-col md:flex-row md:justify-between md:items-center gap-4"
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-xl bg-sky-100 flex items-center justify-center text-sky-700">

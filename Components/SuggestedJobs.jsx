@@ -79,7 +79,7 @@ export default function SuggestedJobs() {
   };
 
   return (
-    <div className="bg-gray-50 pl-24 pr-24 pb-12" dir="rtl">
+    <div className="bg-gray-50 px-4 md:px-12 lg:px-24 pb-12" dir="rtl">
       <h2 className="text-xl font-bold mb-6">وظائف مقترحة لك</h2>
 
       <div className="space-y-4">
@@ -118,7 +118,7 @@ export default function SuggestedJobs() {
 
 function JobCard({ job, jobId, onApply }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm hover:shadow-md p-5 flex items-start justify-between gap-4">
+    <div className="bg-white rounded-2xl shadow-sm hover:shadow-md p-5 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
       <div className="flex-1">
         <h3 className="text-lg font-semibold text-sky-900">{job.title}</h3>
         <p className="text-gray-600 text-sm mb-3">{job.company}</p>

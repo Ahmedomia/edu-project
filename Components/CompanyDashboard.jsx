@@ -43,7 +43,7 @@ export default function CompanyDashboard() {
   }, [activeJobs, applicants]);
 
   return (
-    <div className="bg-gray-50 p-24" dir="rtl">
+    <div className="bg-gray-50 px-4 py-6 md:px-12 lg:px-24 pt-24" dir="rtl">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">لوحة تحكم المنشأة</h1>
