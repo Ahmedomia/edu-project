@@ -2,17 +2,72 @@ import { useState } from "react";
 import Header from "../Components/Header";
 import { useNavigate } from "react-router-dom";
 import useStore from "../src/store";
+import Notification from "../Components/Notification";
 
 const Register = () => {
   const [role, setRole] = useState("teacher");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showNotif, setShowNotif] = useState(false);
+  const [notification, setNotification] = useState(null);
   const navigate = useNavigate();
   const setUser = useStore((state) => state.setUser);
 
   const handleRegister = () => {
+    if (!name.trim()) {
+      setNotification({
+        message:
+          role === "company"
+            ? "يرجى إدخال اسم المنشأة التعليمية"
+            : "يرجى إدخال الاسم الرباعي",
+        type: "error",
+      });
+      return;
+    }
+
+    if (!email.trim()) {
+      setNotification({
+        message: "يرجى إدخال البريد الإلكتروني",
+        type: "error",
+      });
+      return;
+    }
+
+    if (!phone.trim()) {
+      setNotification({
+        message: "يرجى إدخال رقم الجوال",
+        type: "error",
+      });
+      return;
+    }
+
+    if (!password.trim()) {
+      setNotification({
+        message: "يرجى إدخال كلمة المرور",
+        type: "error",
+      });
+      return;
+    }
+
+    if (!confirmPassword.trim()) {
+      setNotification({
+        message: "يرجى تأكيد كلمة المرور",
+        type: "error",
+      });
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setNotification({
+        message: "كلمة المرور غير متطابقة",
+        type: "error",
+      });
+      return;
+    }
+
     const user = {
       name,
       role,
@@ -34,6 +89,13 @@ const Register = () => {
   return (
     <>
       <Header />
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
 
       <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 pt-30 pb-30">
         <div className="w-full max-w-md text-center">
@@ -77,7 +139,8 @@ const Register = () => {
             </div>
             <div className="mb-5">
               <label className="block text-sm text-slate-600 mb-2">
-                {role === "company" ? "اسم المنشأة التعليمية" : "الاسم الرباعي"}
+                {role === "company" ? "اسم المنشأة التعليمية" : "الاسم الرباعي"}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -85,6 +148,7 @@ const Register = () => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full rounded-lg bg-slate-800 px-4 py-3 pr-12 text-sm text-white"
+                  required
                 />
                 <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
                   person
@@ -93,7 +157,7 @@ const Register = () => {
             </div>
             <div className="mb-5">
               <label className="block text-sm text-slate-600 mb-2">
-                البريد الإلكتروني
+                البريد الإلكتروني <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -101,6 +165,7 @@ const Register = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full rounded-lg bg-slate-800 px-4 py-3 pr-12 text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  required
                 />
                 <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
                   mail
@@ -109,7 +174,7 @@ const Register = () => {
             </div>
             <div className="mb-6">
               <label className="block text-sm text-slate-600 mb-2">
-                رقم الجوال
+                رقم الجوال <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -117,6 +182,7 @@ const Register = () => {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full rounded-lg bg-slate-800 px-4 py-3 pr-12 text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  required
                 />
                 <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
                   call
@@ -125,14 +191,17 @@ const Register = () => {
             </div>
             <div className="mb-2 text-right">
               <label className="block text-sm text-slate-600 mb-2">
-                كلمة المرور
+                كلمة المرور <span className="text-red-500">*</span>
               </label>
 
               <div className="relative">
                 <input
                   type="password"
                   placeholder="********"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="w-full rounded-lg bg-slate-800 px-4 py-3 pr-12 text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-900"
+                  required
                 />
 
                 <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
@@ -142,14 +211,17 @@ const Register = () => {
             </div>
             <div className="mb-2 text-right">
               <label className="block text-sm text-slate-600 mb-2">
-                تأكيد كلمة المرور
+                تأكيد كلمة المرور <span className="text-red-500">*</span>
               </label>
 
               <div className="relative">
                 <input
                   type="password"
                   placeholder="********"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full rounded-lg bg-slate-800 px-4 py-3 pr-12 text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-900"
+                  required
                 />
 
                 <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
