@@ -12,24 +12,22 @@ export default function TeacherDashboard() {
   const profileCompletion = useMemo(() => {
     if (!user) return 0;
     let completed = 0;
-    let total = 6;
+    let total = 7;
 
     if (user.name) completed++;
     if (user.email) completed++;
     if (user.phone) completed++;
     if (user.city) completed++;
     if (profile?.bio) completed++;
+    if (profile?.jobTitle || user?.jobTitle) completed++;
     if (experiences.length > 0) completed++;
 
     return Math.round((completed / total) * 100);
   }, [user, profile, experiences]);
 
   const displayName = profile?.name || user?.name || "معلم";
-  const displayTitle = profile?.bio 
-    ? profile.bio.split(" ").slice(0, 3).join(" ") 
-    : experiences.length > 0 
-    ? experiences[0].title 
-    : "معلم";
+  const jobTitle = profile?.jobTitle || user?.jobTitle || (experiences.length > 0 ? experiences[0].title : null);
+  const displayTitle = jobTitle ? `معلم ${jobTitle}` : "معلم";
   
   const userPhoto = profile?.photo || user?.photo;
 

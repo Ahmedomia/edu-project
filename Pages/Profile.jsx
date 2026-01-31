@@ -1,8 +1,94 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../Components/Header";
 import useStore from "../src/store";
 import Notification from "../Components/Notification";
+
+const JOB_TITLES = [
+  "القرآن الكريم والدراسات الإسلامية",
+  "القرآن الكريم وتفسيره",
+  "التجويد",
+  "القراءات",
+  "علوم القرآن",
+  "الحديث",
+  "مصطلح الحديث",
+  "دراسات في الكتب الستة",
+  "تخريج الحديث",
+  "التوحيد",
+  "الفقه",
+  "أصول الفقه",
+  "الفرائض",
+  "اللغة العربية",
+  "الكفايات اللغوية",
+  "الدراسات اللغوية",
+  "النحو والصرف",
+  "البلاغة والنقد",
+  "الأدب العربي وتاريخه",
+  "النصوص الأدبية",
+  "الدراسات الأدبية",
+  "الدراسات البلاغية والنقدية",
+  "العروض والقافية",
+  "القواعد الكتابية",
+  "الرياضيات",
+  "العلوم",
+  "الأحياء",
+  "الفيزياء",
+  "الكيمياء",
+  "علم البيئة",
+  "علوم الأرض والفضاء",
+  "التقنية الرقمية",
+  "المهارات الرقمية",
+  "الحاسب وتقنية المعلومات",
+  "إنترنت الأشياء",
+  "علم البيانات",
+  "الذكاء الاصطناعي",
+  "الأمن السيبراني",
+  "هندسة البرمجيات",
+  "التصميم الهندسي",
+  "الهندسة",
+  "الإحصاء",
+  "الدراسات الاجتماعية",
+  "التاريخ",
+  "الجغرافيا",
+  "المواطنة الرقمية",
+  "التفكير الناقد",
+  "الدراسات النفسية والاجتماعية",
+  "المهارات الحياتية والأسرية",
+  "المهارات الحياتية",
+  "المهارات المهنية",
+  "التربية المهنية",
+  "البحث ومصادر المعلومات",
+  "مشروع التخرج",
+  "المعرفة المالية",
+  "صناعة القرار في الأعمال",
+  "مقدمة في الأعمال",
+  "الإدارة المالية",
+  "مبادئ الاقتصاد",
+  "مبادئ الإدارة",
+  "إدارة الفعاليات",
+  "تخطيط الحملات التسويقية",
+  "السكرتارية والإدارة المكتبية",
+  "مبادئ القانون",
+  "تطبيقات في القانون",
+  "مبادئ العلوم الصحية",
+  "الرعاية الصحية",
+  "أنظمة جسم الإنسان",
+  "التربية الفنية",
+  "الفنون",
+  "الفنون البصرية",
+  "الفنون الموسيقية",
+  "الفنون الأدائية",
+  "التربية البدنية والدفاع عن النفس",
+  "التربية الصحية والبدنية",
+  "اللياقة والثقافة الصحية",
+  "اللغة الإنجليزية",
+  "اللغة الصينية",
+  "التواصل (لبرامج التوحد)",
+  "الأكاديمي (لبرامج التوحد)",
+  "النشاط والتدريب المهني",
+  "الإثراء العام (للموهوبين)",
+  "النشاط",
+];
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -33,10 +119,41 @@ const Profile = () => {
     place: "",
     from: "",
     to: "",
+    photos: [],
+    link: "",
   });
 
   const [showNotif, setShowNotif] = useState(false);
   const [notification, setNotification] = useState(null);
+
+  const [showJobDropdown, setShowJobDropdown] = useState(false);
+  const [jobSearchTerm, setJobSearchTerm] = useState("");
+  const jobDropdownRef = useRef(null);
+
+  const [showExpTitleDropdown, setShowExpTitleDropdown] = useState(false);
+  const [expTitleSearchTerm, setExpTitleSearchTerm] = useState("");
+  const expTitleDropdownRef = useRef(null);
+
+  const filteredJobTitles = JOB_TITLES.filter((title) =>
+    title.toLowerCase().includes(jobSearchTerm.toLowerCase())
+  );
+
+  const filteredExpTitles = JOB_TITLES.filter((title) =>
+    title.toLowerCase().includes(expTitleSearchTerm.toLowerCase())
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (jobDropdownRef.current && !jobDropdownRef.current.contains(event.target)) {
+        setShowJobDropdown(false);
+      }
+      if (expTitleDropdownRef.current && !expTitleDropdownRef.current.contains(event.target)) {
+        setShowExpTitleDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -47,6 +164,7 @@ const Profile = () => {
   useEffect(() => {
     if (profile) {
       setLocalProfile(profile);
+      setJobSearchTerm(profile.jobTitle || "");
     } else if (user) {
       setLocalProfile({
         name: user.name || "",
@@ -58,11 +176,25 @@ const Profile = () => {
         city: user.city || "",
         photo: user.photo || profile?.photo || "",
       });
+      setJobSearchTerm(user.jobTitle || "");
     }
   }, [user, profile]);
 
   const handleChange = (e) => {
     setLocalProfile({ ...localProfile, [e.target.name]: e.target.value });
+  };
+
+  const handleJobTitleChange = (e) => {
+    const value = e.target.value;
+    setJobSearchTerm(value);
+    setLocalProfile({ ...localProfile, jobTitle: value });
+    setShowJobDropdown(true);
+  };
+
+  const selectJobTitle = (title) => {
+    setJobSearchTerm(title);
+    setLocalProfile({ ...localProfile, jobTitle: title });
+    setShowJobDropdown(false);
   };
 
   const handleSave = () => {
@@ -75,7 +207,8 @@ const Profile = () => {
     if (!newExp.title || !newExp.place) return;
 
     addExperience(newExp);
-    setNewExp({ title: "", place: "", from: "", to: "" });
+    setNewExp({ title: "", place: "", from: "", to: "", photos: [], link: "" });
+    setExpTitleSearchTerm("");
     setShowModal(false);
   };
 
@@ -202,13 +335,43 @@ const Profile = () => {
                   : "نوع الحساب"}
               </label>
               {localProfile.role === "teacher" ? (
-                <input
-                  name="jobTitle"
-                  value={localProfile.jobTitle || ""}
-                  onChange={handleChange}
-                  placeholder="مثال: معلم لغة عربية"
-                  className="w-full rounded-lg bg-slate-800 text-white p-3"
-                />
+                <div className="relative" ref={jobDropdownRef}>
+                  <div className="relative">
+                    <input
+                      name="jobTitle"
+                      value={jobSearchTerm}
+                      onChange={handleJobTitleChange}
+                      onFocus={() => setShowJobDropdown(true)}
+                      placeholder="ابحث أو اختر المسمى الوظيفي..."
+                      className="w-full rounded-lg bg-slate-800 text-white p-3 pr-10"
+                    />
+                    <span
+                      className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer"
+                      onClick={() => setShowJobDropdown(!showJobDropdown)}
+                    >
+                      {showJobDropdown ? "expand_less" : "expand_more"}
+                    </span>
+                  </div>
+                  {showJobDropdown && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {filteredJobTitles.length > 0 ? (
+                        filteredJobTitles.map((title, index) => (
+                          <div
+                            key={index}
+                            onClick={() => selectJobTitle(title)}
+                            className="px-4 py-2 hover:bg-sky-100 cursor-pointer text-slate-700 text-right"
+                          >
+                            {title}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-2 text-slate-500 text-right">
+                          لا توجد نتائج
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               ) : (
                 <input
                   value="منشأة"
@@ -283,24 +446,49 @@ const Profile = () => {
                 </h3>
 
                 <div className="space-y-4">
+                  
                   {experiences.map((exp) => (
-                    <div key={exp.id} className="flex justify-between pb-4">
+                    <div key={exp.id} className="flex justify-between pb-4 border-b border-slate-100 last:border-0">
+                     <div className="text-right">
+                          <p className="font-semibold">• {exp.title}</p>
+                          <p className="text-sky-700 text-sm">{exp.place}</p>
+                          <span className="text-xs bg-slate-200 px-3 py-1 rounded-full">
+                            {exp.from} - {exp.to}
+                          </span>
+                          {exp.link && (
+                            <a
+                              href={exp.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block mt-2 text-sky-600 hover:underline text-sm flex items-center gap-1 justify-end"
+                            >
+                              <span>رابط</span>
+                              <span className="material-symbols-outlined text-sm">link</span>
+                            </a>
+                          )}
+                        </div>
+                      <div className="flex gap-3 items-start">
+                        {exp.photos && exp.photos.length > 0 && (
+                          <div className="flex gap-2">
+                            {exp.photos.map((photo, idx) => (
+                              <img
+                                key={idx}
+                                src={photo}
+                                alt={`${exp.title} ${idx + 1}`}
+                                className="w-16 h-16 rounded-lg object-cover"
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       <button
                         onClick={() => handleDeleteExperience(exp.id)}
-                        className="text-slate-400 cursor-pointer hover:text-red-500"
+                        className="text-slate-400 cursor-pointer hover:text-red-500 self-start"
                       >
                         <span className="material-symbols-outlined">
                           delete
                         </span>
                       </button>
-
-                      <div className="text-right">
-                        <p className="font-semibold">• {exp.title}</p>
-                        <p className="text-sky-700 text-sm">{exp.place}</p>
-                        <span className="text-xs bg-slate-200 px-3 py-1 rounded-full">
-                          {exp.from} - {exp.to}
-                        </span>
-                      </div>
                     </div>
                   ))}
                 </div>
@@ -339,14 +527,53 @@ const Profile = () => {
             <h3 className="font-semibold mb-4 text-right">إضافة خبرة جديدة</h3>
 
             <div className="space-y-3">
-              <input
-                placeholder="المسمى الوظيفي"
-                value={newExp.title}
-                onChange={(e) =>
-                  setNewExp({ ...newExp, title: e.target.value })
-                }
-                className="w-full p-3 rounded-lg bg-slate-100"
-              />
+              <div className="relative" ref={expTitleDropdownRef}>
+                <div className="relative">
+                  <input
+                    placeholder="المسمى الوظيفي"
+                    value={expTitleSearchTerm}
+                    onChange={(e) => {
+                      setExpTitleSearchTerm(e.target.value);
+                      setNewExp({ ...newExp, title: e.target.value });
+                      setShowExpTitleDropdown(true);
+                    }}
+                    onFocus={() => setShowExpTitleDropdown(true)}
+                    className="w-full p-3 rounded-lg bg-slate-100 pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowExpTitleDropdown(!showExpTitleDropdown)}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+                  >
+                    <span className="material-symbols-outlined text-xl">
+                      {showExpTitleDropdown ? "expand_less" : "expand_more"}
+                    </span>
+                  </button>
+                </div>
+                {showExpTitleDropdown && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    {filteredExpTitles.length > 0 ? (
+                      filteredExpTitles.map((title, index) => (
+                        <div
+                          key={index}
+                          onClick={() => {
+                            setExpTitleSearchTerm(title);
+                            setNewExp({ ...newExp, title: title });
+                            setShowExpTitleDropdown(false);
+                          }}
+                          className="px-4 py-2 text-right cursor-pointer hover:bg-sky-50 hover:text-sky-700"
+                        >
+                          {title}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-4 py-2 text-slate-400 text-right">
+                        لا توجد نتائج
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
               <input
                 placeholder="المكان"
                 value={newExp.place}
@@ -371,6 +598,63 @@ const Profile = () => {
                   className="w-full p-3 rounded-lg bg-slate-100"
                 />
               </div>
+
+              <input
+                placeholder="رابط (اختياري)"
+                value={newExp.link}
+                onChange={(e) =>
+                  setNewExp({ ...newExp, link: e.target.value })
+                }
+                className="w-full p-3 rounded-lg bg-slate-100"
+              />
+
+              <div className="mt-2">
+                <label className="block text-sm text-slate-600 mb-2 text-right">
+                  إضافة صور (اختياري - حتى 3 صور)
+                </label>
+                <div className="flex items-center gap-3 flex-wrap">
+                  {newExp.photos.map((photo, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={photo}
+                        alt={`preview ${index + 1}`}
+                        className="w-20 h-20 rounded-lg object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updatedPhotos = newExp.photos.filter((_, i) => i !== index);
+                          setNewExp({ ...newExp, photos: updatedPhotos });
+                        }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  {newExp.photos.length < 3 && (
+                    <label className="w-20 h-20 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-sky-500 hover:bg-sky-50 transition">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file && newExp.photos.length < 3) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setNewExp({ ...newExp, photos: [...newExp.photos, reader.result] });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      <span className="material-symbols-outlined text-slate-400 text-2xl">add</span>
+                      <span className="text-xs text-slate-400">{newExp.photos.length}/3</span>
+                    </label>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-3 mt-6">
@@ -381,7 +665,11 @@ const Profile = () => {
                 حفظ
               </button>
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => {
+                  setExpTitleSearchTerm("");
+                  setNewExp({ title: "", place: "", from: "", to: "", photos: [], link: "" });
+                  setShowModal(false);
+                }}
                 className="flex-1 border py-2 rounded-xl"
               >
                 إلغاء
@@ -395,3 +683,4 @@ const Profile = () => {
 };
 
 export default Profile;
+
