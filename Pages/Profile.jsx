@@ -4,91 +4,7 @@ import Header from "../Components/Header";
 import useStore from "../src/store";
 import Notification from "../Components/Notification";
 
-const JOB_TITLES = [
-  "القرآن الكريم والدراسات الإسلامية",
-  "القرآن الكريم وتفسيره",
-  "التجويد",
-  "القراءات",
-  "علوم القرآن",
-  "الحديث",
-  "مصطلح الحديث",
-  "دراسات في الكتب الستة",
-  "تخريج الحديث",
-  "التوحيد",
-  "الفقه",
-  "أصول الفقه",
-  "الفرائض",
-  "اللغة العربية",
-  "الكفايات اللغوية",
-  "الدراسات اللغوية",
-  "النحو والصرف",
-  "البلاغة والنقد",
-  "الأدب العربي وتاريخه",
-  "النصوص الأدبية",
-  "الدراسات الأدبية",
-  "الدراسات البلاغية والنقدية",
-  "العروض والقافية",
-  "القواعد الكتابية",
-  "الرياضيات",
-  "العلوم",
-  "الأحياء",
-  "الفيزياء",
-  "الكيمياء",
-  "علم البيئة",
-  "علوم الأرض والفضاء",
-  "التقنية الرقمية",
-  "المهارات الرقمية",
-  "الحاسب وتقنية المعلومات",
-  "إنترنت الأشياء",
-  "علم البيانات",
-  "الذكاء الاصطناعي",
-  "الأمن السيبراني",
-  "هندسة البرمجيات",
-  "التصميم الهندسي",
-  "الهندسة",
-  "الإحصاء",
-  "الدراسات الاجتماعية",
-  "التاريخ",
-  "الجغرافيا",
-  "المواطنة الرقمية",
-  "التفكير الناقد",
-  "الدراسات النفسية والاجتماعية",
-  "المهارات الحياتية والأسرية",
-  "المهارات الحياتية",
-  "المهارات المهنية",
-  "التربية المهنية",
-  "البحث ومصادر المعلومات",
-  "مشروع التخرج",
-  "المعرفة المالية",
-  "صناعة القرار في الأعمال",
-  "مقدمة في الأعمال",
-  "الإدارة المالية",
-  "مبادئ الاقتصاد",
-  "مبادئ الإدارة",
-  "إدارة الفعاليات",
-  "تخطيط الحملات التسويقية",
-  "السكرتارية والإدارة المكتبية",
-  "مبادئ القانون",
-  "تطبيقات في القانون",
-  "مبادئ العلوم الصحية",
-  "الرعاية الصحية",
-  "أنظمة جسم الإنسان",
-  "التربية الفنية",
-  "الفنون",
-  "الفنون البصرية",
-  "الفنون الموسيقية",
-  "الفنون الأدائية",
-  "التربية البدنية والدفاع عن النفس",
-  "التربية الصحية والبدنية",
-  "اللياقة والثقافة الصحية",
-  "اللغة الإنجليزية",
-  "اللغة الصينية",
-  "التواصل (لبرامج التوحد)",
-  "الأكاديمي (لبرامج التوحد)",
-  "النشاط والتدريب المهني",
-  "الإثراء العام (للموهوبين)",
-  "النشاط",
-];
+import { JOB_TITLES } from "../src/constants";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -110,6 +26,7 @@ const Profile = () => {
       phone: user?.phone || "",
       city: user?.city || "",
       photo: user?.photo || profile?.photo || "",
+      cv: user?.cv || profile?.cv || "",
     };
   });
 
@@ -175,6 +92,7 @@ const Profile = () => {
         phone: user.phone || "",
         city: user.city || "",
         photo: user.photo || profile?.photo || "",
+        cv: user.cv || profile?.cv || "",
       });
       setJobSearchTerm(user.jobTitle || "");
     }
@@ -241,6 +159,45 @@ const Profile = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleCvChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type !== "application/pdf") {
+        setNotification({
+          message: "يرجى اختيار ملف PDF فقط",
+          type: "error",
+        });
+        return;
+      }
+
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        setNotification({
+          message: "حجم الملف كبير جداً (الحد الأقصى 2 ميجابايت)",
+          type: "error",
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLocalProfile({ ...localProfile, cv: reader.result });
+        setNotification({
+          message: "تم رفع السيرة الذاتية بنجاح",
+          type: "success",
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveCv = () => {
+    setLocalProfile({ ...localProfile, cv: "" });
+     setNotification({
+      message: "تم حذف السيرة الذاتية",
+      type: "success",
+    });
   };
 
   return (
@@ -481,6 +438,8 @@ const Profile = () => {
                           </div>
                         )}
                       </div>
+
+
                       <button
                         onClick={() => handleDeleteExperience(exp.id)}
                         className="text-slate-400 cursor-pointer hover:text-red-500 self-start"
@@ -503,6 +462,52 @@ const Profile = () => {
               </div>
             )}
 
+
+             {localProfile.role === "teacher" && (
+                <div className="bg-white rounded-2xl shadow p-6">
+                  <h3 className="font-semibold mb-3 text-right">السيرة الذاتية</h3>
+                  <div className="flex flex-col gap-4">
+                     <p className="text-sm text-slate-500 text-right">
+                        يمكنك رفع سيرتك الذاتية بصيغة PDF (بحد أقصى 2 ميجابايت)
+                     </p>
+                    
+                    <div className="flex gap-4 items-center justify-end">
+                       <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg flex items-center gap-2 transition">
+                         <span className="material-symbols-outlined text-lg">upload_file</span>
+                         <span>رفع ملف PDF</span>
+                         <input
+                           type="file"
+                           accept="application/pdf"
+                           onChange={handleCvChange}
+                           className="hidden"
+                         />
+                       </label>
+                       
+                       {localProfile.cv && (
+                          <div className="flex gap-2">
+                             <a 
+                               href={localProfile.cv} 
+                               target="_blank" 
+                               rel="noreferrer"
+                               className="bg-sky-100 text-sky-700 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-sky-200 transition"
+                             >
+                                <span className="material-symbols-outlined text-lg">visibility</span>
+                                <span>عرض</span>
+                             </a>
+                             <button
+                               onClick={handleRemoveCv}
+                               className="bg-red-50 text-red-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-red-100 transition"
+                             >
+                                <span className="material-symbols-outlined text-lg">delete</span>
+                                <span>حذف</span>
+                             </button>
+                          </div>
+                       )}
+                    </div>
+                  </div>
+                </div>
+             )}
+            
             {localProfile.role === "teacher" && (
               <button
                 onClick={handleSave}

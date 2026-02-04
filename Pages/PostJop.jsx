@@ -3,12 +3,32 @@ import Header from "../Components/Header";
 import { useNavigate } from "react-router-dom";
 import useStore from "../src/store";
 import Notification from "../Components/Notification";
+import { JOB_TITLES } from "../src/constants";
+import { useRef } from "react";
 
 const PostJob = () => {
   const navigate = useNavigate();
   const user = useStore((state) => state.user);
   const addJob = useStore((state) => state.addJob);
   const [notification, setNotification] = useState(null);
+  
+  const [showJobDropdown, setShowJobDropdown] = useState(false);
+  const [jobSearchTerm, setJobSearchTerm] = useState("");
+  const jobDropdownRef = useRef(null);
+
+  const filteredJobTitles = JOB_TITLES.filter((title) =>
+    title.toLowerCase().includes(jobSearchTerm.toLowerCase())
+  );
+
+  useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (jobDropdownRef.current && !jobDropdownRef.current.contains(event.target)) {
+          setShowJobDropdown(false);
+        }
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
   useEffect(() => {
     if (!user || user.role !== "company") {
@@ -92,14 +112,54 @@ const PostJob = () => {
           >
             <div>
               <label className="text-sm text-slate-600">المسمى الوظيفي</label>
-              <input
-                name="title"
-                value={form.title}
-                onChange={handleChange}
-                placeholder="مثال: معلمة لغة عربية"
-                className="w-full mt-1 rounded-lg bg-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-700"
-                required
-              />
+              <div className="relative" ref={jobDropdownRef}>
+                <input
+                  name="title"
+                  value={form.title}
+                  onChange={(e) => {
+                     setForm({ ...form, title: e.target.value });
+                     setJobSearchTerm(e.target.value);
+                     setShowJobDropdown(true);
+                  }}
+                  onFocus={() => {
+                     setJobSearchTerm(form.title);
+                     setShowJobDropdown(true);
+                  }}
+                  placeholder="اختر المسمى الوظيفي"
+                  className="w-full mt-1 rounded-lg bg-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-700"
+                  autoComplete="off"
+                />
+                <span
+                   className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 cursor-pointer"
+                   onClick={() => setShowJobDropdown(!showJobDropdown)}
+                >
+                   {showJobDropdown ? "expand_less" : "expand_more"}
+                </span>
+
+                {showJobDropdown && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {filteredJobTitles.length > 0 ? (
+                      filteredJobTitles.map((title, index) => (
+                        <div
+                          key={index}
+                          onClick={() => {
+                            setForm({ ...form, title: title });
+                            setJobSearchTerm(title);
+                            setShowJobDropdown(false);
+                          }}
+                          className="px-4 py-2 hover:bg-sky-100 cursor-pointer text-slate-700 text-right"
+                        >
+                          {title}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-4 py-2 text-slate-500 text-right">
+                        لا توجد نتائج
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             <div>
               <label className="text-sm text-slate-600">نوع الوظيفة</label>

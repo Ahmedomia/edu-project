@@ -1,19 +1,36 @@
-import { useParams } from "react-router-dom";
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import useStore from "../src/store";
 import Header from "../Components/Header";
 
 export default function ApplicantProfile() {
   const { applicationId } = useParams();
+  const navigate = useNavigate();
+  const [showContactModal, setShowContactModal] = useState(false);
 
   const application = useStore((state) =>
     state.jobApplications.find((app) => app.id == applicationId),
   );
+  
+  const updateApplicationStatus = useStore((state) => state.updateApplicationStatus);
+
   const user = useStore((state) =>
     state.registeredUsers.find((u) => u.email === application?.teacherId),
   );
   const job = useStore((state) =>
     state.companyJobs.find((j) => j.id === application?.jobId),
   );
+
+  const handleReject = () => {
+    if (window.confirm("هل أنت متأكد من رفض هذا الطلب؟")) {
+      updateApplicationStatus(application.id, "rejected");
+      navigate(-1); // Go back to dashboard
+    }
+  };
+
+  const handleInvite = () => {
+     setShowContactModal(true);
+  };
 
   if (!application || !user || !job) {
     return <p className="p-10 text-center text-gray-500">الملف غير موجود</p>;
@@ -23,75 +40,243 @@ export default function ApplicantProfile() {
     <>
       <Header />
 
-      <div className="max-w-5xl mx-auto p-8 bg-white rounded-2xl shadow mt-20 space-y-8">
-        <div className="flex flex-col md:flex-row items-center gap-6">
-          <img
-            src={user.photo || "/avatar.png"}
-            alt={user.name}
-            className="w-28 h-28 rounded-full object-cover border-2 border-sky-300"
-          />
-          <div className="text-center md:text-right">
-            <h1 className="text-3xl font-bold">{user.name}</h1>
-            <p className="text-sky-700 font-medium">{user.jobTitle}</p>
-            <p className="text-sm text-gray-400">{user.city}</p>
+      <div className="bg-slate-100 min-h-screen pt-28 px-6">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Side Panel */}
+          <div className="bg-white rounded-2xl shadow p-6 text-center">
+            <div className="w-28 h-28 mx-auto mb-4 bg-slate-300 rounded-full flex items-center justify-center overflow-hidden">
+              {user.photo ? (
+                <img
+                  src={user.photo}
+                  alt="profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="material-symbols-outlined text-slate-500 text-4xl">
+                  person
+                </span>
+              )}
+            </div>
+
+            <h2 className="font-bold text-lg text-slate-800">{user.name}</h2>
+            <p className="text-sm text-slate-500 mt-1">
+              {user.jobTitle || "معلم"}
+            </p>
+
+            <div className="mt-6 space-y-4 text-right">
+              <label className="text-sm text-slate-600">الاسم الكامل</label>
+              <div className="w-full rounded-lg p-3 bg-slate-200 text-slate-700">
+                {user.name}
+              </div>
+
+              <label className="text-sm text-slate-600">المسمى الوظيفي</label>
+              <div className="w-full rounded-lg p-3 bg-slate-200 text-slate-700">
+                {user.jobTitle || "غير محدد"}
+              </div>
+
+              <label className="text-sm text-slate-600">البريد الإلكتروني</label>
+              <div className="w-full rounded-lg p-3 bg-slate-200 text-slate-700">
+                {user.email}
+              </div>
+
+              <label className="text-sm text-slate-600">رقم الهاتف</label>
+              <div className="w-full rounded-lg p-3 bg-slate-200 text-slate-700">
+                {user.phone || "غير متوفر"}
+              </div>
+
+              <label className="text-sm text-slate-600">المدينة</label>
+              <div className="w-full rounded-lg p-3 bg-slate-200 text-slate-700">
+                {user.city || "غير محدد"}
+              </div>
+            </div>
+            
+            <div className="mt-8 pt-6 border-t border-slate-100">
+                <p className="text-sm text-slate-500 mb-4">إجراءات الطلب</p>
+                <div className="flex flex-col gap-3">
+                  <button 
+                    onClick={handleInvite}
+                    className="bg-sky-700 text-white px-4 py-3 rounded-xl hover:bg-sky-600 transition font-semibold"
+                  >
+                    دعوة لمقابلة
+                  </button>
+                  <button 
+                    onClick={handleReject}
+                    className="bg-white border border-red-200 text-red-600 px-4 py-3 rounded-xl hover:bg-red-50 transition font-semibold"
+                  >
+                    رفض الطلب
+                  </button>
+                </div>
+            </div>
           </div>
-        </div>
-        <section className="bg-slate-50 p-6 rounded-xl shadow-sm space-y-3">
-          <h2 className="text-xl font-semibold mb-2 border-b pb-2">
-            تفاصيل الوظيفة
-          </h2>
-          <div className="space-y-1">
-            <p>
-              <strong>عنوان الوظيفة:</strong> {job.title}
-            </p>
-            <p>
-              <strong>الوصف:</strong> {job.description || "لا يوجد وصف"}
-            </p>
-            <p>
-              <strong>المتطلبات والشروط:</strong>{" "}
-              {job.requirements || "لا توجد متطلبات"}
-            </p>
-            <p>
-              <strong>تم التقديم في:</strong>{" "}
-              {new Date(application.appliedAt).toLocaleDateString("ar-EG")}
-            </p>
+
+          {/* Main Content */}
+          <div className="md:col-span-2 space-y-6">
+            <div className="bg-white rounded-2xl shadow p-6">
+              <h3 className="font-semibold mb-4 text-right border-b pb-2">تفاصيل الوظيفة المقدم عليها</h3>
+              
+              <div className="space-y-4 text-right">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <p className="text-sm text-slate-500">المسمى الوظيفي</p>
+                        <p className="font-bold text-lg text-slate-800">{job.title}</p>
+                    </div>
+                     <div className="text-left">
+                        <p className="text-sm text-slate-500">تاريخ التقديم</p>
+                        <p className="text-slate-800 dir-ltr">{new Date(application.appliedAt).toLocaleDateString('ar-EG')}</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl">
+                    <div>
+                        <p className="text-xs text-slate-500">نوع الوظيفة</p>
+                        <p className="font-medium text-slate-800">{job.jobType}</p>
+                    </div>
+                    <div>
+                        <p className="text-xs text-slate-500">المرحلة الدراسية</p>
+                        <p className="font-medium text-slate-800">{job.stage}</p>
+                    </div>
+                     <div>
+                        <p className="text-xs text-slate-500">المدينة</p>
+                        <p className="font-medium text-slate-800">{job.city}</p>
+                    </div>
+                     <div>
+                        <p className="text-xs text-slate-500">الراتب المتوقع</p>
+                        <p className="font-medium text-slate-800">
+                             {job.salaryFrom} - {job.salaryTo} {job.currency}
+                        </p>
+                    </div>
+                </div>
+
+                 <div className="bg-slate-50 p-4 rounded-xl space-y-3">
+                    <div>
+                        <p className="text-xs text-slate-500 mb-1">وصف الوظيفة</p>
+                        <p className="text-sm text-slate-700 whitespace-pre-wrap">{job.description}</p>
+                    </div>
+                    {job.requirements && (
+                        <div>
+                             <p className="text-xs text-slate-500 mb-1">المتطلبات</p>
+                            <p className="text-sm text-slate-700 whitespace-pre-wrap">{job.requirements}</p>
+                        </div>
+                    )}
+                 </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow p-6">
+              <h3 className="font-semibold mb-3 text-right">نبذة مهنية</h3>
+              <div className="w-full rounded-lg p-4 bg-slate-50 text-slate-700 min-h-[100px] text-right">
+                {user.bio || "لا توجد نبذة"}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow p-6">
+              <h3 className="font-semibold mb-4 text-right">الخبرات العملية</h3>
+              <div className="space-y-4">
+                {user.experiences && user.experiences.length > 0 ? (
+                  user.experiences.map((exp) => (
+                    <div
+                      key={exp.id}
+                      className="flex justify-between pb-4 border-b border-slate-100 last:border-0"
+                    >
+                      <div className="text-right w-full">
+                        <p className="font-semibold text-lg">• {exp.title}</p>
+                        <p className="text-sky-700 text-sm">{exp.place}</p>
+                        <span className="text-xs bg-slate-200 px-3 py-1 rounded-full mt-1 inline-block">
+                          {exp.from} - {exp.to}
+                        </span>
+                         {exp.link && (
+                            <a
+                              href={exp.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block mt-2 text-sky-600 hover:underline text-sm flex items-center gap-1 justify-end"
+                            >
+                              <span>رابط</span>
+                              <span className="material-symbols-outlined text-sm">link</span>
+                            </a>
+                          )}
+                        <div className="flex gap-3 items-start mt-3 justify-end">
+                          {exp.photos && exp.photos.length > 0 && (
+                            <div className="flex gap-2 flex-wrap justify-end">
+                              {exp.photos.map((photo, idx) => (
+                                <img
+                                  key={idx}
+                                  src={photo}
+                                  alt={`${exp.title} ${idx + 1}`}
+                                  className="w-20 h-20 rounded-lg object-cover border border-slate-200"
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center text-slate-500 py-4">
+                    لا توجد خبرات مسجلة
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow p-6">
+              <h3 className="font-semibold mb-3 text-right">السيرة الذاتية</h3>
+              {user.cv ? (
+                <div className="flex justify-end">
+                  <a
+                    href={user.cv}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="bg-sky-100 text-sky-700 px-6 py-3 rounded-xl flex items-center gap-3 hover:bg-sky-200 transition"
+                  >
+                    <span className="material-symbols-outlined text-2xl">
+                      description
+                    </span>
+                    <span className="font-medium">عرض السيرة الذاتية (PDF)</span>
+                  </a>
+                </div>
+              ) : (
+                <p className="text-center text-slate-500 py-4">
+                  لا توجد سيرة ذاتية مرفقة
+                </p>
+              )}
+            </div>
           </div>
-        </section>
-        <section className="bg-slate-50 p-6 rounded-xl shadow-sm">
-          <h2 className="text-xl font-semibold mb-2 border-b pb-2">
-            نبذة عن المتقدم
-          </h2>
-          <p className="text-gray-700">{user.bio || "لا يوجد نبذة"}</p>
-        </section>
-        <section className="bg-slate-50 p-6 rounded-xl shadow-sm">
-          <h2 className="text-xl font-semibold mb-4 border-b pb-2">
-            الخبرات العملية
-          </h2>
-          {user.experiences?.length ? (
-            <ul className="space-y-3">
-              {user.experiences.map((exp) => (
-                <li
-                  key={exp.id}
-                  className="p-3 rounded-lg border border-slate-200 hover:shadow transition"
-                >
-                  <p className="font-medium">{exp.title}</p>
-                  <p className="text-sm text-gray-500">{exp.company}</p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-gray-400">لا توجد خبرات</p>
-          )}
-        </section>
-        <div className="flex flex-col md:flex-row gap-4 justify-center">
-          <button className="bg-sky-700 text-white px-6 py-3 rounded-lg hover:bg-sky-600 transition">
-            دعوة لمقابلة
-          </button>
-          <button className="border px-6 py-3 rounded-lg hover:bg-gray-100 transition">
-            رفض
-          </button>
         </div>
       </div>
+
+      {showContactModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm text-center">
+            <h3 className="text-xl font-bold mb-6">اختر وسيلة التواصل</h3>
+            <div className="flex flex-col gap-4">
+              <a 
+                href={`mailto:${user.email}`}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 py-3 rounded-xl flex items-center justify-center gap-2 transition"
+              >
+                <span className="material-symbols-outlined">mail</span>
+                <span>البريد الإلكتروني</span>
+              </a>
+              {user.phone && (
+                <a 
+                   href={`tel:${user.phone}`}
+                   className="bg-slate-100 hover:bg-slate-200 text-slate-800 py-3 rounded-xl flex items-center justify-center gap-2 transition"
+                >
+                  <span className="material-symbols-outlined">call</span>
+                  <span>رقم الهاتف</span>
+                </a>
+              )}
+            </div>
+            <button 
+              onClick={() => setShowContactModal(false)}
+              className="mt-6 text-slate-500 hover:text-slate-800 text-sm underline"
+            >
+              إلغاء
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

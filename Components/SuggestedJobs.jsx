@@ -4,7 +4,7 @@ import Notification from "./Notification";
 
 export default function SuggestedJobs() {
   const companyJobs = useStore((state) => state.companyJobs);
-  const addJobApplication = useStore((state) => state.addJobApplication);
+  const applyForJob = useStore((state) => state.applyForJob);
   const user = useStore((state) => state.user);
   const [notification, setNotification] = useState(null);
 
@@ -31,7 +31,13 @@ export default function SuggestedJobs() {
       return;
     }
 
-    addJobApplication(jobId);
+    const job = companyJobs.find((j) => j.id === jobId);
+    applyForJob({
+      jobId,
+      teacherId: user.email,
+      teacherName: user.name,
+      company: job?.company,
+    });
 
     setNotification({
       message: "تم إرسال طلب التوظيف بنجاح",

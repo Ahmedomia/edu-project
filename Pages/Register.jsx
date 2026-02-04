@@ -9,6 +9,7 @@ const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [gender, setGender] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNotif, setShowNotif] = useState(false);
@@ -68,11 +69,20 @@ const Register = () => {
       return;
     }
 
+    if (role === "teacher" && !gender) {
+      setNotification({
+        message: "يرجى اختيار الجنس",
+        type: "error",
+      });
+      return;
+    }
+
     const user = {
       name,
       role,
       email,
       phone,
+      gender: role === "teacher" ? gender : "",
       bio: "",
     };
 
@@ -189,6 +199,29 @@ const Register = () => {
                 </span>
               </div>
             </div>
+
+            {role === "teacher" && (
+              <div className="mb-6">
+                <label className="block text-sm text-slate-600 mb-2">
+                  الجنس <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    className="w-full rounded-lg bg-slate-800 px-4 py-3 pr-12 text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-500 appearance-none"
+                  >
+                    <option value="" disabled>اختر الجنس</option>
+                    <option value="ذكر">ذكر</option>
+                    <option value="أنثى">أنثى</option>
+                  </select>
+                  <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
+                    person
+                  </span>
+                </div>
+              </div>
+            )}
+
             <div className="mb-2 text-right">
               <label className="block text-sm text-slate-600 mb-2">
                 كلمة المرور <span className="text-red-500">*</span>

@@ -22,7 +22,7 @@ export default function CompanyDashboard() {
     return jobApplications
       .filter((app) => {
         const job = jobs.find((j) => j.id === app.jobId);
-        return job && job.company === user.name;
+        return job && job.company === user.name && app.status !== "rejected";
       })
       .map((app) => {
         const teacherUser = registeredUsers.find(

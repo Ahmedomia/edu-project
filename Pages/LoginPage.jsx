@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import useStore from "../src/store";
 import { Link } from "react-router-dom";
+import Notification from "../Components/Notification";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -110,15 +111,13 @@ const Login = () => {
           </div>
         </div>
       </div>
+
       {showError && (
-        <div className="fixed top-5 right-5 z-50">
-          <div className="flex items-center gap-3 rounded-xl bg-red-600 px-5 py-4 text-white shadow-lg animate-slide-in">
-            <span className="material-symbols-outlined">error</span>
-            <span className="text-sm font-medium">
-              لا يوجد حساب، يرجى التسجيل أولًا
-            </span>
-          </div>
-        </div>
+        <Notification
+          message="لا يوجد حساب، يرجى التسجيل أولًا"
+          type="error"
+          onClose={() => setShowError(false)}
+        />
       )}
     </>
   );

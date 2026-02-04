@@ -1,12 +1,16 @@
 import { useState, useMemo } from "react";
 import Header from "../Components/Header";
 import useStore from "../src/store";
+import { JOB_TITLES } from "../src/constants";
 import { useNavigate } from "react-router-dom";
 
 const TeachersDatabase = () => {
   const registeredUsers = useStore((state) => state.registeredUsers);
+  const calculateTotalExperience = useStore((state) => state.calculateTotalExperience);
   const [city, setCity] = useState("الكل");
   const [specialty, setSpecialty] = useState("الكل");
+  const [experienceFilter, setExperienceFilter] = useState("الكل");
+  const [genderFilter, setGenderFilter] = useState("الكل");
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
@@ -21,9 +25,11 @@ const TeachersDatabase = () => {
         email: user.email,
         bio: user.bio || "",
         phone: user.phone || "",
+        gender: user.gender || "",
         photo: user.photo || "",
+        totalExperienceYears: user.totalExperienceYears || calculateTotalExperience(user.experiences) || 0,
       }));
-  }, [registeredUsers]);
+  }, [registeredUsers, calculateTotalExperience]);
 
   const cities = useMemo(() => {
     const citySet = new Set(teachers.map((t) => t.city).filter(Boolean));
@@ -32,21 +38,36 @@ const TeachersDatabase = () => {
 
   const filteredTeachers = useMemo(() => {
     return teachers.filter((t) => {
+      // City Filter
       const matchesCity = city === "الكل" || t.city === city;
+      
+      // Search Filter (Case insensitive)
+      const searchLower = search.toLowerCase();
       const matchesSearch =
         !search ||
-        t.name.toLowerCase().includes(search.toLowerCase()) ||
-        t.title.toLowerCase().includes(search.toLowerCase()) ||
-        (t.bio && t.bio.toLowerCase().includes(search.toLowerCase()));
+        (t.name && t.name.toLowerCase().includes(searchLower)) ||
+        (t.title && t.title.toLowerCase().includes(searchLower)) ||
+        (t.bio && t.bio.toLowerCase().includes(searchLower));
 
+      // Specialty Filter
       const matchesSpecialty =
         specialty === "الكل" ||
-        t.title.toLowerCase().includes(specialty.toLowerCase()) ||
+        (t.title && t.title.toLowerCase().includes(specialty.toLowerCase())) ||
         (t.bio && t.bio.toLowerCase().includes(specialty.toLowerCase()));
 
-      return matchesCity && matchesSearch && matchesSpecialty;
+      // Experience Filter
+      const matchesExperience = 
+        experienceFilter === "الكل" || 
+        t.totalExperienceYears >= parseInt(experienceFilter);
+
+      // Gender Filter
+      const matchesGender = 
+        genderFilter === "الكل" || 
+        t.gender === genderFilter;
+
+      return matchesCity && matchesSearch && matchesSpecialty && matchesExperience && matchesGender;
     });
-  }, [teachers, city, search, specialty]);
+  }, [teachers, city, search, specialty, experienceFilter, genderFilter]);
 
   return (
     <>
@@ -75,13 +96,33 @@ const TeachersDatabase = () => {
               className="rounded-lg bg-gray-200 px-4 py-2"
             >
               <option>الكل</option>
-              <option>رياضيات</option>
-              <option>لغات</option>
-              <option>عربية</option>
-              <option>إنجليزي</option>
-              <option>فيزياء</option>
-              <option>كيمياء</option>
-              <option>إرشاد</option>
+              {JOB_TITLES.map((title) => (
+                <option key={title} value={title}>
+                  {title}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={experienceFilter}
+              onChange={(e) => setExperienceFilter(e.target.value)}
+              className="rounded-lg bg-gray-200 px-4 py-2"
+            >
+              <option value="الكل">كل سنوات الخبرة</option>
+              <option value="1">أكثر من سنة</option>
+              <option value="3">أكثر من 3 سنوات</option>
+              <option value="5">أكثر من 5 سنوات</option>
+              <option value="10">أكثر من 10 سنوات</option>
+            </select>
+
+            <select
+              value={genderFilter}
+              onChange={(e) => setGenderFilter(e.target.value)}
+              className="rounded-lg bg-gray-200 px-4 py-2"
+            >
+              <option value="الكل">الجنس</option>
+              <option value="ذكر">ذكر</option>
+              <option value="أنثى">أنثى</option>
             </select>
 
             <div className="relative flex-1">
@@ -140,10 +181,13 @@ const TeachersDatabase = () => {
                     </div>
                   )}
 
-                  <button
-                    onClick={() =>
-                      navigate(`/teacher/${encodeURIComponent(t.email)}`)
-                    }
+                  <div className="flex items-center gap-2 mt-4 text-sm text-gray-500">
+                  <span className="material-symbols-outlined text-lg">work_history</span>
+                  <span>{t.totalExperienceYears > 0 ? `${t.totalExperienceYears} سنوات خبرة` : "لا توجد خبرة مسجلة"}</span>
+                </div>
+                
+                <button
+                  onClick={() => navigate(`/teacher/${encodeURIComponent(t.email)}`)}
                     className="mt-5 w-full rounded-lg border border-sky-800 text-sky-800 py-2 hover:bg-sky-800 hover:text-white transition"
                   >
                     عرض الملف
