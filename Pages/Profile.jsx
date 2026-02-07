@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import Header from "../Components/Header";
 import useStore from "../src/store";
 import Notification from "../Components/Notification";
+import SocialMediaLink from "../Components/SocialMediaLink";
+import LocationSelector from "../Components/LocationSelector";
 
-import { JOB_TITLES } from "../src/constants";
+import { JOB_TITLES, COUNTRY_CODES } from "../src/constants";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -24,9 +26,15 @@ const Profile = () => {
       bio: user?.bio || "",
       email: user?.email || "",
       phone: user?.phone || "",
+      country: user?.country || "",
       city: user?.city || "",
+      neighborhood: user?.neighborhood || "",
       photo: user?.photo || profile?.photo || "",
       cv: user?.cv || profile?.cv || "",
+      languageSkills: user?.languageSkills || [],
+      education: user?.education || "",
+      educationField: user?.educationField || "",
+      landline: user?.landline || profile?.landline || "",
     };
   });
 
@@ -51,6 +59,21 @@ const Profile = () => {
   const [expTitleSearchTerm, setExpTitleSearchTerm] = useState("");
   const expTitleDropdownRef = useRef(null);
 
+  const [countryCode, setCountryCode] = useState(() => {
+    const phone = localProfile.phone || "";
+    const found = COUNTRY_CODES.find(c => phone.startsWith(c.code));
+    return found ? found.code : "+966";
+  });
+
+  const [phoneNumber, setPhoneNumber] = useState(() => {
+    const phone = localProfile.phone || "";
+    const found = COUNTRY_CODES.find(c => phone.startsWith(c.code));
+    return found ? phone.slice(found.code.length) : phone;
+  });
+
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const countryDropdownRef = useRef(null);
+
   const filteredJobTitles = JOB_TITLES.filter((title) =>
     title.toLowerCase().includes(jobSearchTerm.toLowerCase())
   );
@@ -66,6 +89,9 @@ const Profile = () => {
       }
       if (expTitleDropdownRef.current && !expTitleDropdownRef.current.contains(event.target)) {
         setShowExpTitleDropdown(false);
+      }
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target)) {
+        setShowCountryDropdown(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -90,9 +116,14 @@ const Profile = () => {
         bio: user.bio || "",
         email: user.email || "",
         phone: user.phone || "",
+        country: user.country || "",
         city: user.city || "",
+        neighborhood: user.neighborhood || "",
         photo: user.photo || profile?.photo || "",
         cv: user.cv || profile?.cv || "",
+        languageSkills: user.languageSkills || [],
+        education: user.education || "",
+        educationField: user.educationField || "",
       });
       setJobSearchTerm(user.jobTitle || "");
     }
@@ -353,29 +384,95 @@ const Profile = () => {
               />
 
               <label className="text-sm text-slate-600">رقم الهاتف</label>
-              <input
-                name="phone"
-                value={localProfile.phone}
-                onChange={handleChange}
-                disabled={localProfile.role === "company"}
-                className={`w-full rounded-lg p-3 ${
-                  localProfile.role === "company"
-                    ? "bg-slate-200 text-slate-500 cursor-not-allowed"
-                    : "bg-slate-800 text-white"
-                }`}
-              />
+              <div className="flex gap-2" dir="ltr">
+                <div className="relative w-32 min-w-[120px]">
+                  <select
+                    value={countryCode}
+                    onChange={(e) => {
+                      const newCode = e.target.value;
+                      setCountryCode(newCode);
+                      setLocalProfile({ ...localProfile, phone: newCode + phoneNumber });
+                    }}
+                    disabled={localProfile.role === "company"}
+                    className={`w-full h-full rounded-lg px-3 py-3 text-sm appearance-none text-center cursor-pointer ${
+                      localProfile.role === "company"
+                        ? "bg-slate-200 text-slate-500 cursor-not-allowed"
+                        : "bg-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    }`}
+                  >
+                    {COUNTRY_CODES.map((country) => (
+                      <option key={`${country.code}-${country.flag}`} value={country.code}>
+                        {country.flag} {country.code}
+                      </option>
+                    ))}
+                  </select>
+                  {! (localProfile.role === "company") && (
+                    <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-sm">
+                      expand_more
+                    </span>
+                  )}
+                </div>
+                <div className="relative flex-1">
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      setPhoneNumber(val);
+                      setLocalProfile({ ...localProfile, phone: countryCode + val });
+                    }}
+                    disabled={localProfile.role === "company"}
+                    className={`w-full rounded-lg p-3 pl-12 text-sm text-left ${
+                      localProfile.role === "company"
+                        ? "bg-slate-200 text-slate-500 cursor-not-allowed"
+                        : "bg-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    }`}
+                    dir="ltr"
+                  />
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                    call
+                  </span>
+                </div>
+              </div>
 
-              <label className="text-sm text-slate-600">المدينة</label>
-              <input
-                name="city"
-                value={localProfile.city}
-                onChange={handleChange}
+              <label className="text-sm text-slate-600">الرقم الثابت</label>
+              <div className="relative">
+                <input
+                  type="tel"
+                  value={localProfile.landline || ""}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "");
+                    setLocalProfile({ ...localProfile, landline: val });
+                  }}
+                  disabled={localProfile.role === "company"}
+                  className={`w-full rounded-lg p-3 pl-12 text-sm text-left ${
+                    localProfile.role === "company"
+                      ? "bg-slate-200 text-slate-500 cursor-not-allowed"
+                      : "bg-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  }`}
+                  dir="ltr"
+                  placeholder="رقم الهاتف الثابت"
+                />
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                  deskphone
+                </span>
+              </div>
+
+
+              <LocationSelector
+                country={localProfile.country}
+                city={localProfile.city}
+                neighborhood={localProfile.neighborhood}
+                onChange={(location) => {
+                  setLocalProfile({
+                    ...localProfile,
+                    country: location.country,
+                    city: location.city,
+                    neighborhood: location.neighborhood,
+                  });
+                }}
                 disabled={localProfile.role === "company"}
-                className={`w-full rounded-lg p-3 ${
-                  localProfile.role === "company"
-                    ? "bg-slate-200 text-slate-500 cursor-not-allowed"
-                    : "bg-slate-800 text-white"
-                }`}
+                showLabels={true}
               />
             </div>
           </div>
@@ -388,17 +485,132 @@ const Profile = () => {
                 onChange={handleChange}
                 disabled={localProfile.role === "company"}
                 rows={5}
+                maxLength={2000}
                 className={`w-full rounded-lg p-4 ${
                   localProfile.role === "company"
                     ? "bg-slate-200 text-slate-500 cursor-not-allowed"
                     : "bg-slate-800 text-white"
                 }`}
               />
+              <p className="text-xs text-slate-400 text-right mt-1">
+                {localProfile.bio?.length || 0} / 2000 حرف
+              </p>
             </div>
 
             {localProfile.role === "teacher" && (
-              <div className="bg-white rounded-2xl shadow p-6">
-                <h3 className="font-semibold mb-4 text-right">
+              <>
+                <div className="bg-white rounded-2xl shadow p-6">
+                  <h3 className="font-semibold mb-4 text-right">المؤهل العلمي</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm text-slate-600 block mb-1">الدرجة العلمية</label>
+                      <select
+                        name="education"
+                        value={localProfile.education}
+                        onChange={handleChange}
+                        className="w-full rounded-lg p-3 bg-slate-800 text-white"
+                      >
+                        <option value="">اختر الدرجة</option>
+                        <option value="bachelor">بكالوريوس</option>
+                        <option value="master">ماجستير</option>
+                        <option value="phd">دكتوراه</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm text-slate-600 block mb-1">التخصص</label>
+                      <input
+                        type="text"
+                        name="educationField"
+                        value={localProfile.educationField || ""}
+                        onChange={handleChange}
+                        placeholder="مثلاً: رياضيات، فيزياء..."
+                        className="w-full rounded-lg p-3 bg-slate-800 text-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl shadow p-6">
+                  <h3 className="font-semibold mb-4 text-right">
+                    المهارات اللغوية
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    {(localProfile.languageSkills || []).map((lang, index) => (
+                      <div key={index} className="flex gap-3 items-end">
+                        <div className="flex-1">
+                          <label className="text-sm text-slate-600">اللغة</label>
+                          <select
+                            value={lang.language}
+                            onChange={(e) => {
+                              const newSkills = [...(localProfile.languageSkills || [])];
+                              newSkills[index].language = e.target.value;
+                              setLocalProfile({ ...localProfile, languageSkills: newSkills });
+                            }}
+                            className="w-full rounded-lg p-3 bg-slate-800 text-white mt-1"
+                          >
+                            <option value="">اختر اللغة</option>
+                            <option value="arabic">العربية (العربية)</option>
+                            <option value="english">الإنجليزية (English)</option>
+                            <option value="french">الفرنسية (Français)</option>
+                            <option value="german">الألمانية (Deutsch)</option>
+                            <option value="spanish">الإسبانية (Español)</option>
+                            <option value="italian">الإيطالية (Italiano)</option>
+                            <option value="turkish">التركية (Türkçe)</option>
+                            <option value="chinese">الصينية (中文)</option>
+                            <option value="japanese">اليابانية (日本語)</option>
+                            <option value="korean">الكورية (한국어)</option>
+                          </select>
+                        </div>
+                        <div className="flex-1">
+                          <label className="text-sm text-slate-600">المستوى</label>
+                          <select
+                            value={lang.level}
+                            onChange={(e) => {
+                              const newSkills = [...(localProfile.languageSkills || [])];
+                              newSkills[index].level = e.target.value;
+                              setLocalProfile({ ...localProfile, languageSkills: newSkills });
+                            }}
+                            className="w-full rounded-lg p-3 bg-slate-800 text-white mt-1"
+                          >
+                            <option value="">اختر المستوى</option>
+                            <option value="beginner">مبتدئ (Beginner)</option>
+                            <option value="intermediate">متوسط (Intermediate)</option>
+                            <option value="advanced">متقدم (Advanced)</option>
+                            <option value="fluent">طليق (Fluent)</option>
+                            <option value="native">لغة أم (Native)</option>
+                          </select>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newSkills = (localProfile.languageSkills || []).filter((_, i) => i !== index);
+                            setLocalProfile({ ...localProfile, languageSkills: newSkills });
+                          }}
+                          className="p-3 text-red-600 hover:bg-red-50 rounded-lg transition"
+                        >
+                          <span className="material-symbols-outlined">delete</span>
+                        </button>
+                      </div>
+                    ))}
+
+                    {(!localProfile.languageSkills || localProfile.languageSkills.length < 4) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newSkills = [...(localProfile.languageSkills || []), { language: "", level: "" }];
+                          setLocalProfile({ ...localProfile, languageSkills: newSkills });
+                        }}
+                        className="w-full rounded-lg border-2 border-dashed border-slate-300 py-3 text-slate-600 hover:border-sky-700 hover:text-sky-700 transition"
+                      >
+                        + إضافة لغة (الحد الأقصى 4 لغات)
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl shadow p-6">
+                  <h3 className="font-semibold mb-4 text-right">
                   الخبرات العملية
                 </h3>
 
@@ -412,17 +624,7 @@ const Profile = () => {
                           <span className="text-xs bg-slate-200 px-3 py-1 rounded-full">
                             {exp.from} - {exp.to}
                           </span>
-                          {exp.link && (
-                            <a
-                              href={exp.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block mt-2 text-sky-600 hover:underline text-sm flex items-center gap-1 justify-end"
-                            >
-                              <span>رابط</span>
-                              <span className="material-symbols-outlined text-sm">link</span>
-                            </a>
-                          )}
+                          {exp.link && <SocialMediaLink url={exp.link} />}
                         </div>
                       <div className="flex gap-3 items-start">
                         {exp.photos && exp.photos.length > 0 && (
@@ -454,12 +656,12 @@ const Profile = () => {
 
                 <button
                   onClick={() => setShowModal(true)}
-                  className="mt-4 w-full border border-black/20 rounded-xl py-2 flex justify-center cursor-pointer hover:bg-gray-100 gap-2"
+                  className="w-full rounded-lg border-2 border-dashed border-slate-300 py-3 text-slate-600 hover:border-sky-700 hover:text-sky-700 transition"
                 >
-                  <span className="material-symbols-outlined">add</span>
-                  إضافة خبرة
+                  + إضافة خبرة
                 </button>
               </div>
+            </>
             )}
 
 

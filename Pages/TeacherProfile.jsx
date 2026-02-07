@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import useStore from "../src/store";
 import Header from "../Components/Header";
+import SocialMediaLink from "../Components/SocialMediaLink";
+import { formatLocation } from "../src/locationData";
 
 const TeacherProfile = () => {
   const { email } = useParams();
-  const navigate = useNavigate();
   const [showContactModal, setShowContactModal] = useState(false);
 
   const teacher = useStore((state) =>
@@ -72,10 +73,55 @@ const TeacherProfile = () => {
                 {teacher.phone || "غير متوفر"}
               </div>
 
-              <label className="text-sm text-slate-600">المدينة</label>
+              <label className="text-sm text-slate-600">الموقع</label>
               <div className="w-full rounded-lg p-3 bg-slate-200 text-slate-700">
-                {teacher.city || "غير محدد"}
+                {formatLocation(teacher.country, teacher.city, teacher.neighborhood) || "غير محدد"}
               </div>
+
+              {teacher.education && (
+                <div className="col-span-2">
+                  <label className="text-sm text-slate-600 block mb-1">المؤهل العلمي</label>
+                  <div className="flex items-center gap-2 p-3 bg-sky-50 rounded-lg border border-sky-200">
+                    <span className="material-symbols-outlined text-sky-700">school</span>
+                    <span className="text-sm text-sky-800 font-medium">
+                      {teacher.education === 'bachelor' && 'بكالوريوس'}
+                      {teacher.education === 'master' && 'ماجستير'}
+                      {teacher.education === 'phd' && 'دكتوراه'}
+                      {teacher.educationField && ` في ${teacher.educationField}`}
+                    </span>
+                  </div>
+                </div>
+              )}
+              {teacher.languageSkills && teacher.languageSkills.length > 0 && (
+                <div className="col-span-2">
+                  <label className="text-sm text-slate-600 mb-2 block">المهارات اللغوية</label>
+                  <div className="flex flex-wrap gap-2">
+                    {teacher.languageSkills.map((skill, idx) => (
+                      <div key={idx} className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg border border-blue-200">
+                        <span className="material-symbols-outlined text-blue-700 text-sm">translate</span>
+                        <span className="text-sm text-blue-800 font-medium">
+                          {skill.language === 'arabic' && 'عربي'}
+                          {skill.language === 'english' && 'إنجليزي'}
+                          {skill.language === 'french' && 'فرنسي'}
+                          {skill.language === 'german' && 'ألماني'}
+                          {skill.language === 'spanish' && 'إسباني'}
+                          {skill.language === 'italian' && 'إيطالي'}
+                          {skill.language === 'turkish' && 'تركي'}
+                          {skill.language === 'chinese' && 'صيني'}
+                          {skill.language === 'japanese' && 'ياباني'}
+                          {skill.language === 'korean' && 'كوري'}
+                          {' - '}
+                          {skill.level === 'beginner' && 'مبتدئ'}
+                          {skill.level === 'intermediate' && 'متوسط'}
+                          {skill.level === 'advanced' && 'متقدم'}
+                          {skill.level === 'fluent' && 'طليق'}
+                          {skill.level === 'native' && 'لغة أم'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="mt-8 pt-6 border-t border-slate-100">
@@ -112,17 +158,7 @@ const TeacherProfile = () => {
                         <span className="text-xs bg-slate-200 px-3 py-1 rounded-full mt-1 inline-block">
                           {exp.from} - {exp.to}
                         </span>
-                        {exp.link && (
-                          <a
-                            href={exp.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block mt-2 text-sky-600 hover:underline text-sm flex items-center gap-1 justify-end"
-                          >
-                            <span>رابط</span>
-                            <span className="material-symbols-outlined text-sm">link</span>
-                          </a>
-                        )}
+                        {exp.link && <SocialMediaLink url={exp.link} />}
                         
                         <div className="flex gap-3 items-start mt-3 justify-end">
                           {exp.photos && exp.photos.length > 0 && (

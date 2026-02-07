@@ -1,6 +1,7 @@
 import useStore from "../src/store";
 import { useMemo, useState } from "react";
 import Notification from "./Notification";
+import { formatLocation } from "../src/locationData";
 
 export default function SuggestedJobs() {
   const companyJobs = useStore((state) => state.companyJobs);
@@ -103,7 +104,7 @@ export default function SuggestedJobs() {
                 title: job.title,
                 company: job.company,
                 type: job.jobType,
-                location: job.city || "غير محدد",
+                location: formatLocation(job.country, job.city, job.neighborhood) || "غير محدد",
                 salary: formatSalary(job),
                 time: getTimeAgo(job.createdAt),
               }}

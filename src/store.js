@@ -97,10 +97,16 @@ const useStore = create(
             bio: profileData.bio,
             email: profileData.email,
             phone: profileData.phone,
+            landline: profileData.landline || currentUser.landline || "",
+            country: profileData.country,
             city: profileData.city,
+            neighborhood: profileData.neighborhood,
             gender: profileData.gender || currentUser.gender,
             photo: profileData.photo || currentUser.photo,
             cv: profileData.cv || currentUser.cv,
+            languageSkills: profileData.languageSkills || currentUser.languageSkills || [],
+            education: profileData.education || currentUser.education || "",
+            educationField: profileData.educationField || currentUser.educationField || "",
           };
           const registeredUsers = get().registeredUsers;
           const userIndex = registeredUsers.findIndex(
@@ -230,7 +236,16 @@ const useStore = create(
         set({ companyProfile: companyData });
         const currentUser = get().user;
         if (currentUser) {
-          const updatedUser = { ...currentUser, name: companyData.name };
+          const updatedUser = { 
+            ...currentUser, 
+            name: companyData.name,
+            country: companyData.country,
+            city: companyData.city,
+            neighborhood: companyData.neighborhood,
+            phone: companyData.phone,
+            landline: companyData.landline || currentUser.landline || "",
+            mapUrl: companyData.mapUrl
+          };
           const registeredUsers = get().registeredUsers;
           const userIndex = registeredUsers.findIndex(
             (u) => u.email === currentUser.email,

@@ -3,12 +3,14 @@ import Header from "../Components/Header";
 import { useNavigate } from "react-router-dom";
 import useStore from "../src/store";
 import Notification from "../Components/Notification";
+import { COUNTRY_CODES } from "../src/constants";
 
 const Register = () => {
   const [role, setRole] = useState("teacher");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [countryCode, setCountryCode] = useState("+966");
   const [gender, setGender] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -81,7 +83,7 @@ const Register = () => {
       name,
       role,
       email,
-      phone,
+      phone: countryCode + phone,
       gender: role === "teacher" ? gender : "",
       bio: "",
     };
@@ -186,17 +188,40 @@ const Register = () => {
               <label className="block text-sm text-slate-600 mb-2">
                 رقم الجوال <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full rounded-lg bg-slate-800 px-4 py-3 pr-12 text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  required
-                />
-                <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
-                  call
-                </span>
+              <div className="flex gap-2" dir="ltr">
+                <div className="relative w-32 min-w-[120px]">
+                  <select
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    className="w-full h-full rounded-lg bg-slate-800 px-3 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-500 appearance-none text-center cursor-pointer"
+                  >
+                    {COUNTRY_CODES.map((country) => (
+                      <option key={`${country.code}-${country.flag}`} value={country.code}>
+                         {country.flag} {country.code}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-sm">
+                    expand_more
+                  </span>
+                </div>
+                <div className="relative flex-1">
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, "");
+                      setPhone(value);
+                    }}
+                    className="w-full rounded-lg bg-slate-800 px-4 py-3 pl-12 text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-500 text-left"
+                    placeholder="5xxxxxxx"
+                    dir="ltr"
+                    required
+                  />
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                    call
+                  </span>
+                </div>
               </div>
             </div>
 

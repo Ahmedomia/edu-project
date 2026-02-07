@@ -5,12 +5,15 @@ import useStore from "../src/store";
 import Notification from "../Components/Notification";
 import { JOB_TITLES } from "../src/constants";
 import { useRef } from "react";
+import LocationSelector from "../Components/LocationSelector";
+import MapPicker from "../Components/MapPicker";
 
 const PostJob = () => {
   const navigate = useNavigate();
   const user = useStore((state) => state.user);
   const addJob = useStore((state) => state.addJob);
   const [notification, setNotification] = useState(null);
+  const [showMapPicker, setShowMapPicker] = useState(false);
   
   const [showJobDropdown, setShowJobDropdown] = useState(false);
   const [jobSearchTerm, setJobSearchTerm] = useState("");
@@ -39,14 +42,17 @@ const PostJob = () => {
   const [form, setForm] = useState({
     title: "",
     jobType: "دوام كامل",
-    stage: "رياض أطفال",
+    stage: "طفوله مبكره",
     gender: "أنثي",
+    country: "",
     city: "",
+    neighborhood: "",
     salaryFrom: "",
     salaryTo: "",
     currency: "SAR",
     description: "",
     requirements: "",
+    mapUrl: user?.mapUrl || "",
   });
 
   const handleChange = (e) => {
@@ -61,14 +67,17 @@ const PostJob = () => {
     setForm({
       title: "",
       jobType: "دوام كامل",
-      stage: "رياض أطفال",
+      stage: "طفوله مبكره",
       gender: "أنثي",
+      country: "",
       city: "",
+      neighborhood: "",
       salaryFrom: "",
       salaryTo: "",
       currency: "SAR",
       description: "",
       requirements: "",
+      mapUrl: user?.mapUrl || "",
     });
 
     setNotification({
@@ -184,10 +193,11 @@ const PostJob = () => {
                 className="w-full mt-1 rounded-lg bg-gray-200 px-4 py-2"
                 required
               >
-                <option>رياض أطفال</option>
+                <option>طفولة مبكرة </option>
                 <option>ابتدائي</option>
-                <option>إعدادي</option>
+                <option>متوسط</option>
                 <option>ثانوي</option>
+                <option>جامعي</option>
               </select>
             </div>
             <div>
@@ -204,20 +214,26 @@ const PostJob = () => {
                 <option>لا يهم</option>
               </select>
             </div>
-            <div>
-              <label className="text-sm text-slate-600">المدينة</label>
-              <input
-                name="city"
-                value={form.city}
-                onChange={handleChange}
-                placeholder="مثال: الرياض"
-                className="w-full mt-1 rounded-lg bg-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-700"
-                required
+            <div className="md:col-span-2">
+              <LocationSelector
+                country={form.country}
+                city={form.city}
+                neighborhood={form.neighborhood}
+                onChange={(location) => {
+                  setForm({
+                    ...form,
+                    country: location.country,
+                    city: location.city,
+                    neighborhood: location.neighborhood,
+                  });
+                }}
+                disabled={false}
+                showLabels={true}
               />
             </div>
             <div>
               <label className="text-sm text-slate-600">
-                الراتب المتوقع (من)
+                الراتب المتوقع (من) (اختياري)
               </label>
               <input
                 name="salaryFrom"
@@ -230,7 +246,7 @@ const PostJob = () => {
             </div>
             <div>
               <label className="text-sm text-slate-600">
-                الراتب المتوقع (إلى)
+                الراتب المتوقع (إلى) (اختياري)
               </label>
               <input
                 name="salaryTo"
@@ -270,18 +286,24 @@ const PostJob = () => {
               />
             </div>
             <div className="md:col-span-2">
-              <label className="text-sm text-slate-600">
-                المتطلبات والشروط
-              </label>
-              <textarea
-                name="requirements"
-                value={form.requirements}
-                onChange={handleChange}
-                rows="5"
-                placeholder="درجة الباكلريوس في  ..."
-                className="w-full mt-1 rounded-lg bg-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-700"
-                required
-              />
+              <label className="text-sm text-slate-600">رابط الموقع على الخريطة (اختياري)</label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute right-3 top-3 text-slate-400">link</span>
+                <input
+                  name="mapUrl"
+                  value={form.mapUrl}
+                  onChange={handleChange}
+                  placeholder="رابط خرائط جوجل..."
+                  className="w-full mt-1 rounded-lg bg-gray-200 px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-sky-700"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowMapPicker(true)}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-sky-100 text-sky-700 px-3 py-1 rounded-md text-xs hover:bg-sky-200 transition"
+                >
+                  تحديد من الخريطة
+                </button>
+              </div>
             </div>
             <div className="md:col-span-2 flex justify-end mt-4">
               <button
@@ -294,6 +316,13 @@ const PostJob = () => {
           </form>
         </div>
       </div>
+      
+      <MapPicker
+        isOpen={showMapPicker}
+        onClose={() => setShowMapPicker(false)}
+        onConfirm={(url) => setForm({ ...form, mapUrl: url })}
+        initialUrl={form.mapUrl}
+      />
     </>
   );
 };

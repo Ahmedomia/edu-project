@@ -269,7 +269,18 @@ export default function JobSearch() {
                       <p>{job.city}</p>
                       <p>{formatSalary(job)}</p>
                       <p>{job.jobType}</p>
-                      <div className="flex gap-3 justify-end pt-2">
+                      <div className="flex gap-3 justify-end pt-2 items-center">
+                        {job.mapUrl && (
+                          <a
+                            href={job.mapUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sky-700 hover:text-sky-900 flex items-center gap-1 text-xs font-medium"
+                          >
+                            <span className="material-symbols-outlined text-sm">location_on</span>
+                            الموقع على الخريطة
+                          </a>
+                        )}
                         <button
                           onClick={() => handleApply(job.id)}
                           className="bg-sky-800 text-white rounded-lg px-4 py-2 cursor-pointer hover:bg-sky-600"

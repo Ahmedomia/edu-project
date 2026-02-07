@@ -11,6 +11,8 @@ const TeachersDatabase = () => {
   const [specialty, setSpecialty] = useState("الكل");
   const [experienceFilter, setExperienceFilter] = useState("الكل");
   const [genderFilter, setGenderFilter] = useState("الكل");
+  const [languageFilter, setLanguageFilter] = useState("الكل");
+  const [educationFilter, setEducationFilter] = useState("الكل");
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
@@ -27,6 +29,8 @@ const TeachersDatabase = () => {
         phone: user.phone || "",
         gender: user.gender || "",
         photo: user.photo || "",
+        languageSkills: user.languageSkills || [],
+        education: user.education || "",
         totalExperienceYears: user.totalExperienceYears || calculateTotalExperience(user.experiences) || 0,
       }));
   }, [registeredUsers, calculateTotalExperience]);
@@ -38,36 +42,34 @@ const TeachersDatabase = () => {
 
   const filteredTeachers = useMemo(() => {
     return teachers.filter((t) => {
-      // City Filter
       const matchesCity = city === "الكل" || t.city === city;
-      
-      // Search Filter (Case insensitive)
       const searchLower = search.toLowerCase();
       const matchesSearch =
         !search ||
         (t.name && t.name.toLowerCase().includes(searchLower)) ||
         (t.title && t.title.toLowerCase().includes(searchLower)) ||
         (t.bio && t.bio.toLowerCase().includes(searchLower));
-
-      // Specialty Filter
       const matchesSpecialty =
         specialty === "الكل" ||
         (t.title && t.title.toLowerCase().includes(specialty.toLowerCase())) ||
         (t.bio && t.bio.toLowerCase().includes(specialty.toLowerCase()));
-
-      // Experience Filter
       const matchesExperience = 
         experienceFilter === "الكل" || 
         t.totalExperienceYears >= parseInt(experienceFilter);
-
-      // Gender Filter
       const matchesGender = 
         genderFilter === "الكل" || 
         t.gender === genderFilter;
+      const matchesLanguage = 
+        languageFilter === "الكل" || 
+        (t.languageSkills && t.languageSkills.some(skill => skill.language === languageFilter));
+      
+      const matchesEducation = 
+        educationFilter === "الكل" || 
+        t.education === educationFilter;
 
-      return matchesCity && matchesSearch && matchesSpecialty && matchesExperience && matchesGender;
+      return matchesCity && matchesSearch && matchesSpecialty && matchesExperience && matchesGender && matchesLanguage && matchesEducation;
     });
-  }, [teachers, city, search, specialty, experienceFilter, genderFilter]);
+  }, [teachers, city, search, specialty, experienceFilter, genderFilter, languageFilter, educationFilter]);
 
   return (
     <>
@@ -123,6 +125,35 @@ const TeachersDatabase = () => {
               <option value="الكل">الجنس</option>
               <option value="ذكر">ذكر</option>
               <option value="أنثى">أنثى</option>
+            </select>
+
+            <select
+              value={languageFilter}
+              onChange={(e) => setLanguageFilter(e.target.value)}
+              className="rounded-lg bg-gray-200 px-4 py-2"
+            >
+              <option value="الكل">كل اللغات</option>
+              <option value="arabic">عربي</option>
+              <option value="english">إنجليزي</option>
+              <option value="french">فرنسي</option>
+              <option value="german">ألماني</option>
+              <option value="spanish">إسباني</option>
+              <option value="italian">إيطالي</option>
+              <option value="turkish">تركي</option>
+              <option value="chinese">صيني</option>
+              <option value="japanese">ياباني</option>
+              <option value="korean">كوري</option>
+            </select>
+
+            <select
+              value={educationFilter}
+              onChange={(e) => setEducationFilter(e.target.value)}
+              className="rounded-lg bg-gray-200 px-4 py-2"
+            >
+              <option value="الكل">كل المؤهلات</option>
+              <option value="bachelor">بكالوريوس</option>
+              <option value="master">ماجستير</option>
+              <option value="phd">دكتوراه</option>
             </select>
 
             <div className="relative flex-1">

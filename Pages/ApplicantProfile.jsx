@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import useStore from "../src/store";
 import Header from "../Components/Header";
+import SocialMediaLink from "../Components/SocialMediaLink";
+import { formatLocation } from "../src/locationData";
 
 export default function ApplicantProfile() {
   const { applicationId } = useParams();
@@ -81,12 +83,40 @@ export default function ApplicantProfile() {
 
               <label className="text-sm text-slate-600">رقم الهاتف</label>
               <div className="w-full rounded-lg p-3 bg-slate-200 text-slate-700">
-                {user.phone || "غير متوفر"}
+                {user.phone ? (
+                  <a href={`tel:${user.phone}`} className="text-sky-600 hover:text-sky-700 hover:underline flex items-center gap-2" dir="ltr">
+                    <span className="material-symbols-outlined text-sm">call</span>
+                    {user.phone}
+                  </a>
+                ) : "غير متوفر"}
               </div>
 
-              <label className="text-sm text-slate-600">المدينة</label>
+              {user.landline && (
+                <>
+                  <label className="text-sm text-slate-600">الرقم الثابت</label>
+                  <div className="w-full rounded-lg p-3 bg-slate-200 text-slate-700">
+                    <a href={`tel:${user.landline}`} className="text-sky-600 hover:text-sky-700 hover:underline flex items-center gap-2" dir="ltr">
+                      <span className="material-symbols-outlined text-sm">deskphone</span>
+                      {user.landline}
+                    </a>
+                  </div>
+                </>
+              )}
+
+              <label className="text-sm text-slate-600">الموقع</label>
               <div className="w-full rounded-lg p-3 bg-slate-200 text-slate-700">
-                {user.city || "غير محدد"}
+                {formatLocation(user.country, user.city, user.neighborhood) || "غير محدد"}
+              </div>
+
+              <label className="text-sm text-slate-600">الجنس</label>
+              <div className="w-full rounded-lg p-3 bg-slate-200 text-slate-700">
+                {user.gender === "female" ? "أنثى" : user.gender === "male" ? "ذكر" : user.gender || "غير محدد"}
+              </div>
+
+              <label className="text-sm text-slate-600">المؤهل العلمي</label>
+              <div className="w-full rounded-lg p-3 bg-slate-200 text-slate-700">
+                {user.education === "bachelor" ? "بكالوريوس" : user.education === "master" ? "ماجستير" : user.education === "phd" ? "دكتوراه" : user.education || "غير محدد"} 
+                {user.educationField ? ` - ${user.educationField}` : ""}
               </div>
             </div>
             
@@ -136,8 +166,8 @@ export default function ApplicantProfile() {
                         <p className="font-medium text-slate-800">{job.stage}</p>
                     </div>
                      <div>
-                        <p className="text-xs text-slate-500">المدينة</p>
-                        <p className="font-medium text-slate-800">{job.city}</p>
+                        <p className="text-xs text-slate-500">الموقع</p>
+                        <p className="font-medium text-slate-800">{formatLocation(job.country, job.city, job.neighborhood)}</p>
                     </div>
                      <div>
                         <p className="text-xs text-slate-500">الراتب المتوقع</p>
@@ -170,6 +200,37 @@ export default function ApplicantProfile() {
             </div>
 
             <div className="bg-white rounded-2xl shadow p-6">
+              <h3 className="font-semibold mb-3 text-right">المهارات اللغوية</h3>
+              <div className="flex flex-wrap gap-2 justify-end">
+                {user.languageSkills && user.languageSkills.length > 0 ? (
+                  user.languageSkills.map((lang, index) => (
+                    <div key={index} className="bg-sky-50 text-sky-700 px-4 py-2 rounded-xl border border-sky-100 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-sm">language</span>
+                      <span className="font-medium">
+                        {lang.language === "arabic" ? "العربية" : 
+                         lang.language === "english" ? "الإنجليزية" : 
+                         lang.language === "french" ? "الفرنسية" : 
+                         lang.language === "german" ? "الألمانية" : 
+                         lang.language}
+                      </span>
+                      <span className="text-xs text-sky-500">•</span>
+                      <span className="text-xs">
+                        {lang.level === "beginner" ? "مبتدئ" : 
+                         lang.level === "intermediate" ? "متوسط" : 
+                         lang.level === "advanced" ? "متقدم" : 
+                         lang.level === "fluent" ? "طليق" : 
+                         lang.level === "native" ? "لغة أم" : 
+                         lang.level}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center w-full text-slate-500 py-2">لا توجد مهارات لغوية مسجلة</p>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow p-6">
               <h3 className="font-semibold mb-4 text-right">الخبرات العملية</h3>
               <div className="space-y-4">
                 {user.experiences && user.experiences.length > 0 ? (
@@ -184,17 +245,7 @@ export default function ApplicantProfile() {
                         <span className="text-xs bg-slate-200 px-3 py-1 rounded-full mt-1 inline-block">
                           {exp.from} - {exp.to}
                         </span>
-                         {exp.link && (
-                            <a
-                              href={exp.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block mt-2 text-sky-600 hover:underline text-sm flex items-center gap-1 justify-end"
-                            >
-                              <span>رابط</span>
-                              <span className="material-symbols-outlined text-sm">link</span>
-                            </a>
-                          )}
+                         {exp.link && <SocialMediaLink url={exp.link} />}
                         <div className="flex gap-3 items-start mt-3 justify-end">
                           {exp.photos && exp.photos.length > 0 && (
                             <div className="flex gap-2 flex-wrap justify-end">

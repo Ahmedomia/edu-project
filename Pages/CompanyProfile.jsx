@@ -3,6 +3,9 @@ import Header from "../Components/Header";
 import { useNavigate } from "react-router-dom";
 import useStore from "../src/store";
 import Notification from "../Components/Notification";
+import LocationSelector from "../Components/LocationSelector";
+import MapPicker from "../Components/MapPicker";
+import { COUNTRY_CODES } from "../src/constants";
 
 const CompanyProfile = () => {
   const navigate = useNavigate();
@@ -21,16 +24,46 @@ const CompanyProfile = () => {
       email: user.email || "",
       phone: user.phone || "",
       educationType: "",
-      system: "",
-      city: "",
-      address: "",
+      educationCategory: "",
+      stages: [],
+      country: user.country || "",
+      city: user.city || "",
+      neighborhood: user.neighborhood || "",
       bio: "",
       logo: "",
+      mapUrl: user.mapUrl || "",
+      landline: user.landline || companyProfile?.landline || "",
     };
   });
 
   const [showNotif, setShowNotif] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [showMapPicker, setShowMapPicker] = useState(false);
+
+  const [countryCode, setCountryCode] = useState(() => {
+    const phone = company?.phone || "";
+    const found = COUNTRY_CODES.find(c => phone.startsWith(c.code));
+    return found ? found.code : "+966";
+  });
+
+  const [phoneNumber, setPhoneNumber] = useState(() => {
+    const phone = company?.phone || "";
+    const found = COUNTRY_CODES.find(c => phone.startsWith(c.code));
+    return found ? phone.slice(found.code.length) : phone;
+  });
+
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const countryDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target)) {
+        setShowCountryDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -52,11 +85,14 @@ const CompanyProfile = () => {
         email: user.email || "",
         phone: user.phone || "",
         educationType: "",
-        system: "",
-        city: "",
-        address: "",
+        educationCategory: "",
+        stages: [],
+        country: user.country || "",
+        city: user.city || "",
+        neighborhood: user.neighborhood || "",
         bio: "",
         logo: "",
+        mapUrl: user.mapUrl || "",
       });
     }
   }, [user, companyProfile]);
@@ -65,6 +101,14 @@ const CompanyProfile = () => {
 
   const handleChange = (e) => {
     setCompany({ ...company, [e.target.name]: e.target.value });
+  };
+
+  const handleStageToggle = (stage) => {
+    const currentStages = company.stages || [];
+    const newStages = currentStages.includes(stage)
+      ? currentStages.filter((s) => s !== stage)
+      : [...currentStages, stage];
+    setCompany({ ...company, stages: newStages });
   };
 
   const handleLogoClick = () => {
@@ -175,54 +219,170 @@ const CompanyProfile = () => {
                     className="w-full mt-1 rounded-lg bg-slate-800 text-white p-3"
                   >
                     <option value="">اختر</option>
-                    <option value="أهلي">أهلي</option>
-                    <option value="حكومي">حكومي</option>
+                    <option value="تعليم عام">تعليم عام</option>
+                    <option value="تعليم جامعي">تعليم جامعي</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="text-sm">المدينة</label>
-                  <input
-                    name="city"
-                    value={company.city}
+                  <label className="text-sm">فئة التعليم</label>
+                  <select
+                    name="educationCategory"
+                    value={company.educationCategory}
                     onChange={handleChange}
                     className="w-full mt-1 rounded-lg bg-slate-800 text-white p-3"
-                  />
+                  >
+                    <option value="">اختر</option>
+                    <option value="تعليم عالمي">تعليم عالمي</option>
+                    <option value="تعليم حكومي">تعليم حكومي</option>
+                  </select>
                 </div>
 
-                <div>
-                  <label className="text-sm">المنهج الدراسي</label>
-                  <input
-                    name="system"
-                    value={company.system}
-                    onChange={handleChange}
-                    className="w-full mt-1 rounded-lg bg-slate-800 text-white p-3"
-                  />
-                </div>
+                {company.educationType === "تعليم عام" && (
+                  <div className="md:col-span-2">
+                    <label className="text-sm block mb-2">المراحل الدراسية (اختياري - يمكنك اختيار أكثر من مرحلة)</label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {["طفوله مبكره", "ابتدائي", "متوسط", "ثانوي"].map((stage) => (
+                        <div 
+                          key={stage}
+                          onClick={() => handleStageToggle(stage)}
+                          className={`cursor-pointer p-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${
+                            company.stages?.includes(stage) 
+                              ? 'border-sky-500 bg-sky-50 text-sky-800 shadow-sm' 
+                              : 'border-slate-800 bg-slate-800 text-white hover:border-slate-600'
+                          }`}
+                        >
+                          <span className={`material-symbols-outlined text-sm ${company.stages?.includes(stage) ? 'text-sky-600' : 'text-slate-400'}`}>
+                            {company.stages?.includes(stage) ? 'check_circle' : 'circle'}
+                          </span>
+                          <span className="text-sm">{stage}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="md:col-span-2">
-                  <label className="text-sm">العنوان</label>
-                  <input
-                    name="address"
-                    value={company.address}
-                    onChange={handleChange}
-                    className="w-full mt-1 rounded-lg bg-slate-800 text-white p-3"
+                  <LocationSelector
+                    data={company}
+                    onUpdate={(updatedLocation) => setCompany({ ...company, ...updatedLocation })}
+                    darkMode={true}
                   />
                 </div>
               </div>
             </div>
             <div className="bg-white rounded-2xl shadow p-6">
-              <h3 className="font-semibold mb-4 text-right">بيانات الاتصال</h3>
+              <div className="flex justify-between items-center mb-4">
+                <button
+                  onClick={() => {
+                    const query = `${company.neighborhood || ""} ${company.city || ""} ${company.country || ""}`.trim();
+                    window.open(`https://www.google.com/maps/search/${encodeURIComponent(query)}`, '_blank');
+                  }}
+                  className="text-xs bg-sky-100 text-sky-700 px-3 py-1 rounded-lg hover:bg-sky-200 transition flex items-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-sm">map</span>
+                  افتح الخريطة للبحث
+                </button>
+                <h3 className="font-semibold text-right text-slate-800">موقع المنشأة على الخريطة</h3>
+              </div>
+
+              <div className="text-right">
+                <label className="text-sm text-slate-600 block mb-2">رابط الخريطة (Google Maps)</label>
+                <div className="relative">
+                  <span className="material-symbols-outlined absolute right-3 top-3 text-slate-400">link</span>
+                  <input
+                    name="mapUrl"
+                    value={company.mapUrl || ""}
+                    onChange={handleChange}
+                    placeholder="قم بلصق رابط الموقع من خرائط جوجل هنا..."
+                    className="w-full rounded-lg bg-slate-800 text-white p-3 pr-10 text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowMapPicker(true)}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-sky-100 text-sky-700 px-3 py-1 rounded-md text-xs hover:bg-sky-200 transition"
+                  >
+                    تحديد من الخريطة
+                  </button>
+                </div>
+                {company.mapUrl && (
+                  <a 
+                    href={company.mapUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xs text-sky-600 hover:underline mt-2 inline-block"
+                  >
+                    عرض الموقع الحالي على الخريطة ←
+                  </a>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow p-6">
+              <h3 className="font-semibold mb-4 text-right text-slate-800">بيانات الاتصال</h3>
 
               <div className="grid md:grid-cols-2 gap-4 text-right">
                 <input
                   value={company.email}
-                  className="rounded-lg bg-slate-800 text-white p-3"
+                  readOnly
+                  className="rounded-lg bg-slate-200 text-slate-500 p-3 cursor-not-allowed"
                 />
-                <input
-                  value={company.phone}
-                  className="rounded-lg bg-slate-800 text-white p-3"
-                />
+                <div className="flex gap-2" dir="ltr">
+                  <div className="relative w-32 min-w-[120px]">
+                    <select
+                      value={countryCode}
+                      onChange={(e) => {
+                        const newCode = e.target.value;
+                        setCountryCode(newCode);
+                        setCompany({ ...company, phone: newCode + phoneNumber });
+                      }}
+                      className="w-full h-full rounded-lg bg-slate-800 text-white px-3 py-3 text-sm appearance-none text-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    >
+                      {COUNTRY_CODES.map((country) => (
+                        <option key={`${country.code}-${country.flag}`} value={country.code}>
+                          {country.flag} {country.code}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-sm">
+                      expand_more
+                    </span>
+                  </div>
+                  <div className="relative flex-1">
+                    <input
+                      type="tel"
+                      value={phoneNumber}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "");
+                        setPhoneNumber(val);
+                        setCompany({ ...company, phone: countryCode + val });
+                      }}
+                      className="w-full rounded-lg bg-slate-800 text-white p-3 pl-12 text-sm text-left focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      dir="ltr"
+                    />
+                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                      call
+                    </span>
+                  </div>
+                </div>
+
+                {/* Landline Field */}
+                <div className="relative">
+                  <input
+                    type="tel"
+                    value={company.landline || ""}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      setCompany({ ...company, landline: val });
+                    }}
+                    className="w-full rounded-lg bg-slate-800 text-white p-3 pl-12 text-sm text-left focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    dir="ltr"
+                    placeholder="رقم الهاتف الثابت"
+                  />
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                    deskphone
+                  </span>
+                </div>
               </div>
             </div>
             <div className="bg-white rounded-2xl shadow p-6">
@@ -232,8 +392,12 @@ const CompanyProfile = () => {
                 value={company.bio}
                 onChange={handleChange}
                 rows={4}
+                maxLength={2000}
                 className="w-full rounded-lg bg-slate-800 text-white p-4"
               />
+              <p className="text-xs text-slate-400 text-right mt-1">
+                {company.bio?.length || 0} / 2000 حرف
+              </p>
             </div>
 
             <button
@@ -251,6 +415,13 @@ const CompanyProfile = () => {
           </div>
         )}
       </div>
+
+      <MapPicker
+        isOpen={showMapPicker}
+        onClose={() => setShowMapPicker(false)}
+        onConfirm={(url) => setCompany({ ...company, mapUrl: url })}
+        initialUrl={company.mapUrl}
+      />
     </>
   );
 };
