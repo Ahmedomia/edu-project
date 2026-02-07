@@ -244,7 +244,12 @@ const useStore = create(
             neighborhood: companyData.neighborhood,
             phone: companyData.phone,
             landline: companyData.landline || currentUser.landline || "",
-            mapUrl: companyData.mapUrl
+            mapUrl: companyData.mapUrl,
+            educationType: companyData.educationType || "",
+            educationCategory: companyData.educationCategory || "",
+            stages: companyData.stages || [],
+            bio: companyData.bio || "",
+            photo: companyData.logo || companyData.photo || currentUser.photo || ""
           };
           const registeredUsers = get().registeredUsers;
           const userIndex = registeredUsers.findIndex(

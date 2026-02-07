@@ -91,6 +91,13 @@ const Header = () => {
                   <span className="material-symbols-outlined">search</span>
                   البحث عن وظائف
                 </div>
+                <div
+                  onClick={() => navigate("/CompanyDatabase")}
+                  className="flex items-center gap-1 cursor-pointer hover:text-sky-800"
+                >
+                  <span className="material-symbols-outlined">apartment</span>
+                  دليل المنشآت
+                </div>
               </>
             )}
             {user.role === "company" && (
@@ -194,6 +201,13 @@ const Header = () => {
                     >
                       البحث عن وظائف
                       <span className="material-symbols-outlined">search</span>
+                    </div>
+                    <div
+                      onClick={() => handleNavigate("/CompanyDatabase")}
+                      className="flex items-center justify-end gap-2 py-2 text-slate-700 hover:text-sky-800 cursor-pointer"
+                    >
+                      دليل المنشآت
+                      <span className="material-symbols-outlined">apartment</span>
                     </div>
                   </>
                 )}

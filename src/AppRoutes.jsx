@@ -11,6 +11,9 @@ import CompanyProfile from "../Pages/CompanyProfile";
 import JobSearch from "../Pages/JobSearch";
 import TeacherProfile from "../Pages/TeacherProfile";
 import ApplicantProfile from "../Pages/ApplicantProfile";
+import CompanyDatabase from "../Pages/CompanyDatabase";
+import CompanyDetail from "../Pages/CompanyDetail";
+
 function App() {
   return (
     <Routes>
@@ -22,7 +25,9 @@ function App() {
       <Route path="/Profile" element={<Profile />} />
       <Route path="/PostJop" element={<PostJob />} />
       <Route path="/TeacherDatabase" element={<TeachersDatabase />} />
+      <Route path="/CompanyDatabase" element={<CompanyDatabase />} />
       <Route path="/CompanyProfile" element={<CompanyProfile />} />
+      <Route path="/company/:email" element={<CompanyDetail />} />
       <Route path="/JobSearch" element={<JobSearch />} />
       <Route path="/teacher/:email" element={<TeacherProfile />} />
       <Route path="/applicant/:applicationId" element={<ApplicantProfile />} />
