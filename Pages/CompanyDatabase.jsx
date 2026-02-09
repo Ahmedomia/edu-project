@@ -113,7 +113,7 @@ const CompanyDatabase = () => {
               {/* Removed Education Category filter */}
 
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] text-slate-500 pr-2">المسار التدريسي</label>
+                <label className="text-[10px] text-slate-500 pr-2">المرحلة الدراسية</label>
                 <select
                   value={selectedStage}
                   onChange={(e) => setSelectedStage(e.target.value)}
