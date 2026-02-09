@@ -35,8 +35,8 @@ const CompanyDatabase = () => {
   }, [registeredUsers]);
 
   const filterOptions = useMemo(() => {
-    const types = new Set(companies.map((c) => c.educationType).filter(Boolean));
-    const categories = new Set(companies.map((c) => c.educationCategory).filter(Boolean));
+    const types = new Set(["تعليم عام", "تعليم جامعي", ...companies.map((c) => c.educationType).filter(Boolean)]);
+    const categories = new Set(["تعليم عالمي", "تعليم حكومي", ...companies.map((c) => c.educationCategory).filter(Boolean)]);
     const citySet = new Set(companies.map((c) => c.city).filter(Boolean));
     
     return {

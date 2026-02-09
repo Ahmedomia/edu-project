@@ -20,16 +20,24 @@ export default function CompanyDashboard() {
 
   const companyName = companyProfile?.name || user?.name || "المنشأة";
 
+  const myJobs = useMemo(() => {
+    if (!user) return [];
+    return jobs.filter((job) => 
+      job.companyEmail === user.email || 
+      (!job.companyEmail && job.company === user.name)
+    );
+  }, [jobs, user]);
+
   const activeJobs = useMemo(() => {
-    return jobs.filter((job) => job.status === "active");
-  }, [jobs]);
+    return myJobs.filter((job) => job.status === "active");
+  }, [myJobs]);
 
   const applicants = useMemo(() => {
     if (!user) return [];
     return jobApplications
       .filter((app) => {
-        const job = jobs.find((j) => j.id === app.jobId);
-        return job && job.company === user.name && app.status !== "rejected";
+        const job = myJobs.find((j) => j.id === app.jobId);
+        return job && app.status !== "rejected";
       })
       .map((app) => {
         const teacherUser = registeredUsers.find(
@@ -47,7 +55,7 @@ export default function CompanyDashboard() {
           languageSkills: teacherUser?.languageSkills || [],
         };
       });
-  }, [jobApplications, jobs, user, registeredUsers]);
+  }, [jobApplications, myJobs, user, registeredUsers]);
 
   const totalApplicants = useMemo(() => {
     return activeJobs.reduce((sum, job) => {
@@ -187,8 +195,8 @@ export default function CompanyDashboard() {
             )}
           </div>
 
-          {jobs
-            .slice(0, showAllJobs ? jobs.length : 10)
+          {myJobs
+            .slice(0, showAllJobs ? myJobs.length : 10)
             .map((job) => (
             <div
               key={job.id}

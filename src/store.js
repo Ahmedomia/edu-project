@@ -51,14 +51,28 @@ const useStore = create(
           const experiences = foundUser.experiences || [];
           const totalExperienceYears = get().calculateTotalExperience(experiences);
           
-          // Update the user object with the calculated total if it's different/missing
-          // This is a "silent migration" for existing users
-          let userToSet = { ...foundUser, experiences, totalExperienceYears };
+          // Hydrate stats or use defaults
+          const teacherStats = foundUser.teacherStats || {
+            profileViews: 0,
+            interviewInvitations: 0,
+            jobApplications: 0,
+          };
+
+          const companyStats = foundUser.companyStats || {
+             jobViews: 0,
+             totalApplicants: 0,
+          };
+          
+          let userToSet = { ...foundUser, experiences, totalExperienceYears, teacherStats, companyStats };
           
           set({ 
             user: userToSet, 
             username: foundUser.name || null,
             experiences: experiences,
+            teacherStats: teacherStats,
+            companyStats: companyStats,
+            companyProfile: null, // Clear potential previous session draft
+            profile: null, // Clear potential previous session draft
           });
           return true;
         }
@@ -153,8 +167,6 @@ const useStore = create(
           }
           
           if (toYear >= fromYear) {
-             // If start and end are same year, count as 1 year
-             // If different (e.g. 2020-2022), count difference (2 years)
             const diff = toYear - fromYear;
             total += (diff === 0 ? 1 : diff);
           }
@@ -169,12 +181,10 @@ const useStore = create(
           { id: Date.now(), ...experience },
         ];
         
-        // Calculate total years
         const totalExperienceYears = get().calculateTotalExperience(newExperiences);
         
         set({ experiences: newExperiences });
 
-        // Update user in registeredUsers
         const currentUser = get().user;
         if (currentUser) {
           const updatedUser = { 
@@ -203,12 +213,10 @@ const useStore = create(
         const currentExperiences = get().experiences;
         const newExperiences = currentExperiences.filter((exp) => exp.id !== id);
         
-        // Calculate total years
         const totalExperienceYears = get().calculateTotalExperience(newExperiences);
         
         set({ experiences: newExperiences });
         
-        // Update user in registeredUsers
         const currentUser = get().user;
         if (currentUser) {
            const updatedUser = { 
@@ -277,6 +285,7 @@ const useStore = create(
           id: Date.now(),
           ...job,
           company: currentUser?.name || "منشأة",
+          companyEmail: currentUser?.email, // Link job to specific user email
           status: "active",
           createdAt: new Date().toISOString(),
           applicants: 0,
@@ -300,18 +309,29 @@ const useStore = create(
 
       incrementInterviewInvitation: () => {
         const stats = get().teacherStats;
-        set({
-          teacherStats: {
+        const newStats = {
             ...stats,
             interviewInvitations: stats.interviewInvitations + 1,
-          },
-        });
+        };
+        set({ teacherStats: newStats });
+
+        // Persist to user
+        const currentUser = get().user;
+        if (currentUser) {
+            const updatedUser = { ...currentUser, teacherStats: newStats };
+            const registeredUsers = get().registeredUsers;
+            const idx = registeredUsers.findIndex(u => u.email === currentUser.email);
+            if (idx !== -1) {
+                const updatedRegisteredUsers = [...registeredUsers];
+                updatedRegisteredUsers[idx] = updatedUser;
+                set({ registeredUsers: updatedRegisteredUsers, user: updatedUser });
+            }
+        }
       },
 
       applyForJob: (application) => {
         const currentApplications = get().jobApplications;
         
-        // Validation: Check if already applied
         const alreadyApplied = currentApplications.some(
           (app) => app.jobId === application.jobId && app.teacherId === application.teacherId
         );
@@ -324,15 +344,29 @@ const useStore = create(
           status: "pending",
         };
 
-        set({
-          jobApplications: [...currentApplications, newApplication],
-          teacherStats: {
+        const newTeacherStats = {
             ...get().teacherStats,
             jobApplications: get().teacherStats.jobApplications + 1,
-          },
+        };
+
+        set({
+          jobApplications: [...currentApplications, newApplication],
+          teacherStats: newTeacherStats,
         });
 
-        // Update jobs applicant count
+        // Persist Stats to User
+        const currentUser = get().user;
+        if (currentUser) {
+            const updatedUser = { ...currentUser, teacherStats: newTeacherStats };
+            const registeredUsers = get().registeredUsers;
+            const idx = registeredUsers.findIndex(u => u.email === currentUser.email);
+            if (idx !== -1) {
+                const updatedRegisteredUsers = [...registeredUsers];
+                updatedRegisteredUsers[idx] = updatedUser;
+                set({ registeredUsers: updatedRegisteredUsers, user: updatedUser });
+            }
+        }
+
         const jobs = get().companyJobs;
         const jobIndex = jobs.findIndex((j) => j.id === application.jobId);
         if (jobIndex !== -1) {
@@ -362,13 +396,39 @@ const useStore = create(
 
       incrementJobView: () => {
         const stats = get().companyStats;
-        set({ companyStats: { ...stats, jobViews: stats.jobViews + 1 } });
+        const newStats = { ...stats, jobViews: stats.jobViews + 1 };
+        set({ companyStats: newStats });
+        
+         // Persist to user (Company)
+         const currentUser = get().user;
+         if (currentUser) {
+             const updatedUser = { ...currentUser, companyStats: newStats };
+             const registeredUsers = get().registeredUsers;
+             const idx = registeredUsers.findIndex(u => u.email === currentUser.email);
+             if (idx !== -1) {
+                 const updatedRegisteredUsers = [...registeredUsers];
+                 updatedRegisteredUsers[idx] = updatedUser;
+                 set({ registeredUsers: updatedRegisteredUsers, user: updatedUser });
+             }
+         }
       },
 
       logout: () => {
         set({
           user: null,
           username: null,
+          profile: null,
+          experiences: [],
+          companyProfile: null,
+          teacherStats: {
+            profileViews: 0,
+            interviewInvitations: 0,
+            jobApplications: 0,
+          },
+          companyStats: {
+            jobViews: 0,
+            totalApplicants: 0,
+          },
         });
       },
     }),

@@ -241,7 +241,6 @@ const PostJob = () => {
                 value={form.salaryFrom}
                 onChange={handleChange}
                 className="w-full mt-1 rounded-lg bg-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-700"
-                required
               />
             </div>
             <div>
@@ -254,7 +253,6 @@ const PostJob = () => {
                 value={form.salaryTo}
                 onChange={handleChange}
                 className="w-full mt-1 rounded-lg bg-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-700"
-                required
               />
             </div>
             <div>
