@@ -94,19 +94,19 @@ export const LOCATION_DATA = {
 
 // Get all countries
 export const getCountries = () => {
-  return Object.keys(LOCATION_DATA);
+  return Object.keys(LOCATION_DATA).sort((a, b) => a.localeCompare(b, 'ar'));
 };
 
 // Get cities for a specific country
 export const getCitiesByCountry = (country) => {
   if (!country || !LOCATION_DATA[country]) return [];
-  return Object.keys(LOCATION_DATA[country]);
+  return Object.keys(LOCATION_DATA[country]).sort((a, b) => a.localeCompare(b, 'ar'));
 };
 
 // Get neighborhoods for a specific city in a country
 export const getNeighborhoodsByCity = (country, city) => {
   if (!country || !city || !LOCATION_DATA[country] || !LOCATION_DATA[country][city]) return [];
-  return LOCATION_DATA[country][city];
+  return [...LOCATION_DATA[country][city]].sort((a, b) => a.localeCompare(b, "ar"));
 };
 
 // Format location for display

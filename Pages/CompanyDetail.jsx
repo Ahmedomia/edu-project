@@ -76,10 +76,6 @@ const CompanyDetail = () => {
                     <span className="text-xs text-slate-500">نوع التعليم</span>
                     <span className="font-semibold text-slate-800">{company.educationType || "غير محدد"}</span>
                  </div>
-                 <div className="flex flex-col gap-1">
-                    <span className="text-xs text-slate-500">فئة التعليم</span>
-                    <span className="font-semibold text-slate-800">{company.educationCategory || "غير محدد"}</span>
-                 </div>
               </div>
             </div>
 

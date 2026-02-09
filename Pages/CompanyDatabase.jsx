@@ -9,7 +9,7 @@ const CompanyDatabase = () => {
   const [city, setCity] = useState("الكل");
   const [search, setSearch] = useState("");
   const [educationType, setEducationType] = useState("الكل");
-  const [educationCategory, setEducationCategory] = useState("الكل");
+  // Removed educationCategory state
   const [selectedStage, setSelectedStage] = useState("الكل");
   const navigate = useNavigate();
 
@@ -29,21 +29,20 @@ const CompanyDatabase = () => {
         photo: user.photo || "",
         mapUrl: user.mapUrl || "",
         educationType: user.educationType || "",
-        educationCategory: user.educationCategory || "",
+        // Removed educationCategory
         stages: user.stages || [],
       }));
   }, [registeredUsers]);
 
   const filterOptions = useMemo(() => {
-    const types = new Set(["تعليم عام", "تعليم جامعي", ...companies.map((c) => c.educationType).filter(Boolean)]);
-    const categories = new Set(["تعليم عالمي", "تعليم حكومي", ...companies.map((c) => c.educationCategory).filter(Boolean)]);
+    const types = new Set(["تعليم عام", "تعليم اهلي", "تعليم عالمي", "تعليم جامعي", ...companies.map((c) => c.educationType).filter(Boolean)]);
+    // Removed categories
     const citySet = new Set(companies.map((c) => c.city).filter(Boolean));
     
     return {
-      cities: ["الكل", ...Array.from(citySet)],
+      cities: ["الكل", ...Array.from(citySet).sort((a, b) => a.localeCompare(b, "ar"))],
       types: ["الكل", ...Array.from(types)],
-      categories: ["الكل", ...Array.from(categories)],
-      stages: ["الكل", "طفوله مبكره", "ابتدائي", "متوسط", "ثانوي"]
+      stages: ["الكل", "طفوله مبكره", "ابتدائي", "متوسط", "ثانوي", "جامعي"]
     };
   }, [companies]);
 
@@ -51,7 +50,7 @@ const CompanyDatabase = () => {
     return companies.filter((c) => {
       const matchesCity = city === "الكل" || c.city === city;
       const matchesType = educationType === "الكل" || c.educationType === educationType;
-      const matchesCategory = educationCategory === "الكل" || c.educationCategory === educationCategory;
+      // Removed matchesCategory
       const matchesStage = selectedStage === "الكل" || (c.stages && c.stages.includes(selectedStage));
       
       const searchLower = search.toLowerCase();
@@ -60,9 +59,9 @@ const CompanyDatabase = () => {
         (c.name && c.name.toLowerCase().includes(searchLower)) ||
         (c.bio && c.bio.toLowerCase().includes(searchLower));
 
-      return matchesCity && matchesType && matchesCategory && matchesStage && matchesSearch;
+      return matchesCity && matchesType && matchesStage && matchesSearch;
     });
-  }, [companies, city, search, educationType, educationCategory, selectedStage]);
+  }, [companies, city, search, educationType, selectedStage]);
 
   return (
     <>
@@ -94,7 +93,13 @@ const CompanyDatabase = () => {
                 <label className="text-[10px] text-slate-500 pr-2">نوع التعليم</label>
                 <select
                   value={educationType}
-                  onChange={(e) => setEducationType(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEducationType(val);
+                    if (val === "تعليم جامعي") {
+                      setSelectedStage("جامعي");
+                    }
+                  }}
                   className="rounded-lg bg-gray-200 px-4 py-2 text-right text-sm"
                 >
                   {filterOptions.types.map((t) => (
@@ -105,20 +110,7 @@ const CompanyDatabase = () => {
                 </select>
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] text-slate-500 pr-2">فئة التعليم</label>
-                <select
-                  value={educationCategory}
-                  onChange={(e) => setEducationCategory(e.target.value)}
-                  className="rounded-lg bg-gray-200 px-4 py-2 text-right text-sm"
-                >
-                  {filterOptions.categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat === "الكل" ? "جميع الفئات" : cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Removed Education Category filter */}
 
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] text-slate-500 pr-2">المسار التدريسي</label>
@@ -188,11 +180,6 @@ const CompanyDatabase = () => {
                      {c.educationType && (
                         <span className="text-[10px] bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full font-semibold">
                           {c.educationType}
-                        </span>
-                     )}
-                     {c.educationCategory && (
-                        <span className="text-[10px] bg-slate-800 text-white px-2 py-0.5 rounded-full font-semibold">
-                          {c.educationCategory}
                         </span>
                      )}
                   </div>

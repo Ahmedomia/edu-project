@@ -215,30 +215,26 @@ const CompanyProfile = () => {
                   <select
                     name="educationType"
                     value={company.educationType}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCompany(prev => ({
+                        ...prev,
+                        educationType: val,
+                        stages: val === "تعليم جامعي" ? ["جامعي"] : []
+                      }));
+                    }}
                     className="w-full mt-1 rounded-lg bg-slate-800 text-white p-3"
                   >
                     <option value="">اختر</option>
-                    <option value="تعليم عام">تعليم عام</option>
+                    <option value="تعليم اهلي">تعليم اهلي</option>
+                    <option value="تعليم عالمي">تعليم عالمي</option>
                     <option value="تعليم جامعي">تعليم جامعي</option>
                   </select>
                 </div>
 
-                <div>
-                  <label className="text-sm">فئة التعليم</label>
-                  <select
-                    name="educationCategory"
-                    value={company.educationCategory}
-                    onChange={handleChange}
-                    className="w-full mt-1 rounded-lg bg-slate-800 text-white p-3"
-                  >
-                    <option value="">اختر</option>
-                    <option value="تعليم عالمي">تعليم عالمي</option>
-                    <option value="تعليم حكومي">تعليم حكومي</option>
-                  </select>
-                </div>
+                {/* Removed Education Category as requested */}
 
-                {company.educationType === "تعليم عام" && (
+                {company.educationType !== "تعليم جامعي" && (
                   <div className="md:col-span-2">
                     <label className="text-sm block mb-2">المراحل الدراسية (اختياري - يمكنك اختيار أكثر من مرحلة)</label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

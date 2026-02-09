@@ -19,7 +19,7 @@ export default function JobSearch() {
 
   const cities = useMemo(() => {
     const citySet = new Set(companyJobs.map((job) => job.city).filter(Boolean));
-    return ["الكل", ...Array.from(citySet)];
+    return ["الكل", ...Array.from(citySet).sort((a, b) => a.localeCompare(b, "ar"))];
   }, [companyJobs]);
 
   const stages = useMemo(() => {
@@ -193,7 +193,7 @@ export default function JobSearch() {
                   onChange={(e) => setSelectedGender(e.target.value)}
                   className="rounded-lg bg-slate-100 px-4 py-3"
                 >
-                  <option value="الكل">كل الأجناس</option>
+                  <option value="الكل"> الجنس</option>
                   <option value="ذكر">ذكر</option>
                   <option value="أنثي">أنثى</option>
                   <option value="لا يهم">لا يهم</option>
